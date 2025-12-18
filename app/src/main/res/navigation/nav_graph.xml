@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/mainFragment">
+
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.dima.notesscanner.ui.main.MainFragment">
+        <action
+            android:id="@+id/action_main_to_image_processing"
+            app:destination="@id/imageProcessingFragment"/>
+        </fragment>
+
+    <fragment
+        android:id="@+id/imageProcessingFragment"
+        android:name="com.dima.notesscanner.ui.main.ImageProcessingFragment" >
+
+        <action
+            android:id="@+id/action_image_processing_to_image_editing"
+            app:destination="@id/imageEditingFragment"
+            />
+        <action
+            android:id="@+id/action_image_processing_to_preview"
+            app:destination="@id/previewFragment"
+            />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/imageEditingFragment"
+        android:name="com.dima.notesscanner.ui.main.ImageEditingFragment">
+        <action
+            android:id="@+id/action_image_editing_to_image_processing"
+            app:destination="@id/imageProcessingFragment"
+            />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/previewFragment"
+        android:name="com.dima.notesscanner.ui.main.PreviewFragment" >
+
+    </fragment>
+
+</navigation>
