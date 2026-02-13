@@ -19,6 +19,9 @@ class ImageProcessingFragment : Fragment() {
         view.findViewById<Button>(R.id.btnToEditing).setOnClickListener(){
             findNavController().navigate(R.id.action_image_processing_to_image_editing)
         }
+        view.findViewById<Button>(R.id.btnToCamera).setOnClickListener {
+            findNavController().navigate(R.id.action_image_processing_to_camera)
+        }
     }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

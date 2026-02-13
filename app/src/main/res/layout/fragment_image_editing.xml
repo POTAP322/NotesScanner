@@ -10,9 +10,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Редактирование фото"/>
+
     <Button
+        android:id="@+id/btnBack"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/btnBack" android:text="← Назад"/>
+        android:text="← Назад" />
 
 </LinearLayout>

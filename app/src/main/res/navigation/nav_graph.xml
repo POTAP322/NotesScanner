@@ -24,6 +24,10 @@
             android:id="@+id/action_image_processing_to_preview"
             app:destination="@id/previewFragment"
             />
+        <action
+            android:id="@+id/action_image_processing_to_camera"
+            app:destination="@+id/cameraFragment"
+            />
 
     </fragment>
 
@@ -40,6 +44,16 @@
     <fragment
         android:id="@+id/previewFragment"
         android:name="com.dima.notesscanner.ui.main.PreviewFragment" >
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/cameraFragment"
+        android:name="com.dima.notesscanner.ui.main.CameraFragment">
+        <action
+            android:id="@+id/action_camera_to_image_processing"
+            app:destination="@+id/imageProcessingFragment"
+            />
 
     </fragment>
 
