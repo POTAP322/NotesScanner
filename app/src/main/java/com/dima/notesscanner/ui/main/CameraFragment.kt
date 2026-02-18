@@ -15,24 +15,6 @@ import com.dima.notesscanner.R
 
 class CameraFragment : Fragment() {
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        if(!hasRequiredPermissions()) {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                CAMERAX_PERMISSIONS,
-                0
-            )
-        }
-
-        view.findViewById<Button>(R.id.btnBack2).setOnClickListener {
-            findNavController().navigate(R.id.action_camera_to_image_processing)
-        }
-    }
-
-
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -41,6 +23,26 @@ class CameraFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_camera, container, false)
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+
+
+        if(!hasRequiredPermissions()) {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                CAMERAX_PERMISSIONS,
+                0
+            )
+        } else {
+
+
+        }
+
+        view.findViewById<Button>(R.id.btnBack2).setOnClickListener {
+            findNavController().navigate(R.id.action_camera_to_image_processing)
+        }
+    }
 
 
     //проверка разрешений
