@@ -34,6 +34,9 @@
     <fragment
         android:id="@+id/imageEditingFragment"
         android:name="com.dima.notesscanner.ui.main.ImageEditingFragment">
+        <argument
+            android:name="photoPath"
+            app:argType="string" />
         <action
             android:id="@+id/action_image_editing_to_image_processing"
             app:destination="@id/imageProcessingFragment"

@@ -24,6 +24,8 @@ import androidx.navigation.fragment.findNavController
 import com.dima.notesscanner.MainActivity
 import com.dima.notesscanner.R
 import java.io.File
+import com.dima.notesscanner.viewmodel.SharedGalleryViewModel
+import androidx.fragment.app.activityViewModels
 
 class CameraFragment : Fragment() {
 
@@ -31,6 +33,8 @@ class CameraFragment : Fragment() {
     private lateinit var previewView: PreviewView
     private var camera: Camera? = null
     private var isFlashOn = false
+
+    private val sharedGalleryViewModel: SharedGalleryViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,7 +53,6 @@ class CameraFragment : Fragment() {
             requestPermissions(CAMERAX_PERMISSIONS, 0)
         } else {
             startCamera()
-
         }
 
         view.findViewById<Button>(R.id.btnBack2).setOnClickListener {
@@ -60,6 +63,9 @@ class CameraFragment : Fragment() {
         }
         view.findViewById<ImageButton>(R.id.btnFlash).setOnClickListener {
             toggleFlash()
+        }
+        view.findViewById<Button>(R.id.btnDone).setOnClickListener {
+            findNavController().navigate(R.id.action_camera_to_image_processing)
         }
 
     }
@@ -140,9 +146,11 @@ class CameraFragment : Fragment() {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
-                    Toast.makeText(requireContext(), "Фото сохранено", Toast.LENGTH_SHORT).show()
 
-                    // TODO: передать фото обратно в ImageProcessingFragment
+                    // Передаём фото в ViewModel
+                    sharedGalleryViewModel.addPhoto(photoFile)
+
+                    Toast.makeText(requireContext(), "Фото сохранено", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onError(exception: ImageCaptureException) {

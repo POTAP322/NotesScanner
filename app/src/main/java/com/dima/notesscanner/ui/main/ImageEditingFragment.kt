@@ -10,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import com.dima.notesscanner.R
 
 class ImageEditingFragment : Fragment() {
+    val photoPath = arguments?.getString("photoPath")
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
