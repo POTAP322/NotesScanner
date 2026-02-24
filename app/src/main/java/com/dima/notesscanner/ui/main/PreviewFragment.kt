@@ -1,60 +1,140 @@
 package com.dima.notesscanner.ui.main
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.TextView
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.viewpager2.widget.ViewPager2
 import com.dima.notesscanner.R
+import com.dima.notesscanner.utils.PdfGenerator
+import com.dima.notesscanner.viewmodel.SharedGalleryViewModel
+import com.google.android.material.tabs.TabLayout
+import kotlinx.coroutines.launch
+import java.io.File
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [PreviewFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class PreviewFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var viewPager: ViewPager2
+    private lateinit var tabLayout: TabLayout
+    private lateinit var pageCount: TextView
+    private lateinit var btnSave: Button
+    private lateinit var btnShare: Button
+
+    private val sharedGalleryViewModel: SharedGalleryViewModel by activityViewModels()
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_preview, container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment PreviewFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            PreviewFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        initViews(view)
+        setupToolbar(view)
+        setupButtons()
+        setupViewPager()
+    }
+
+    private fun initViews(view: View) {
+        viewPager = view.findViewById(R.id.viewPager2)
+        tabLayout = view.findViewById(R.id.tabLayout)
+        pageCount = view.findViewById(R.id.pageCount)
+        btnSave = view.findViewById(R.id.btnSave)
+        btnShare = view.findViewById(R.id.btnShare)
+    }
+
+    private fun setupToolbar(view: View) {
+        view.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar)
+            .setNavigationOnClickListener {
+                findNavController().navigateUp()
+            }
+    }
+
+    private fun setupButtons() {
+        btnSave.setOnClickListener {
+            val photos = sharedGalleryViewModel.allPhotos.value
+
+            if (photos.isNullOrEmpty()) {
+                Toast.makeText(requireContext(), "Нет фото для сохранения", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            lifecycleScope.launch {
+                val progressDialog = android.app.ProgressDialog(requireContext()).apply {
+                    setMessage("Создание PDF...")
+                    setCancelable(false)
+                    show()
+                }
+
+                val generator = PdfGenerator(requireContext())
+                val result = generator.savePdf(photos)
+
+                progressDialog.dismiss()
+
+                result.onSuccess { uri ->
+                    // Извлекаем имя файла из Uri
+                    val fileName = uri.lastPathSegment?.substringAfterLast('/') ?: "PDF"
+                    Toast.makeText(requireContext(), "PDF сохранен: $fileName", Toast.LENGTH_SHORT).show()
+                }.onFailure { error ->
+                    Toast.makeText(requireContext(), "Ошибка сохранения: ${error.message}", Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+
+        btnShare.setOnClickListener {
+            val photos = sharedGalleryViewModel.allPhotos.value
+
+            if (photos.isNullOrEmpty()) {
+                Toast.makeText(requireContext(), "Нет фото для отправки", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            lifecycleScope.launch {
+                val progressDialog = android.app.ProgressDialog(requireContext()).apply {
+                    setMessage("Подготовка к отправке...")
+                    setCancelable(false)
+                    show()
+                }
+
+                val generator = PdfGenerator(requireContext())
+                val result = generator.createShareablePdf(photos)
+
+                progressDialog.dismiss()
+
+                result.onSuccess { uri ->
+                    // Создаем Intent для отправки
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(shareIntent, "Отправить PDF"))
+                }.onFailure { error ->
+                    Toast.makeText(requireContext(), "Ошибка: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun setupViewPager() {
+        val photos = sharedGalleryViewModel.allPhotos.value ?: emptyList()
+        pageCount.text = "Страниц: ${photos.size}"
+
+        if (photos.isNotEmpty()) {
+            // Позже добавишь адаптер
+            // viewPager.adapter = PhotoPagerAdapter(photos)
+        }
     }
 }

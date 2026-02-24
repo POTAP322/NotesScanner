@@ -1,24 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="16dp">
+    android:background="#F5F5F5">
 
+    <!-- Заголовок -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/white"
+        app:title="Предпросмотр PDF"
+        app:titleCentered="true"
+        app:navigationIcon="@drawable/arrow_back"
+        android:id="@+id/toolbar"/>
+
+    <!-- Счётчик страниц -->
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/pageCount"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Предпросмотр PDF"/>
+        android:text="Страниц: 0"
+        android:textAlignment="center"
+        android:padding="12dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:background="@color/white"
+        android:layout_marginBottom="1dp"/>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/btnSave" android:text="Сохранить"/>
+    <!-- Предпросмотр PDF (занимает всё доступное место) -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager2"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/white"/>
 
-    <Button
-        android:layout_width="wrap_content"
+    <!-- Индикатор текущей страницы -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/btnShare" android:text="Поделиться"/>
+        android:background="@color/white"
+        app:tabGravity="center"
+        app:tabMode="fixed"
+        android:visibility="gone"/>
+
+    <!-- Нижняя панель с кнопками -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:background="@color/white"
+        android:elevation="8dp">
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="💾 Сохранить"
+            android:layout_marginEnd="8dp"
+            />
+
+        <Button
+            android:id="@+id/btnShare"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📤 Отправить"
+           />
+
+    </LinearLayout>
 
 </LinearLayout>

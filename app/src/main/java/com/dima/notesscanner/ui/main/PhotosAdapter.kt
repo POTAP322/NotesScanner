@@ -19,7 +19,6 @@ class PhotosAdapter(
 
     class PhotoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val ivPhoto: ImageView = itemView.findViewById(R.id.ivPhoto)
-        val progressBar: View = itemView.findViewById(R.id.progressBar)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoViewHolder {
@@ -31,9 +30,6 @@ class PhotosAdapter(
     override fun onBindViewHolder(holder: PhotoViewHolder, position: Int) {
         val photoFile = photos[position]
 
-
-        // Заглушка для фото (потом заменим на реальное изображение)
-        // Загружаем фото из файла
         val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
         holder.ivPhoto.setImageBitmap(bitmap)
 
