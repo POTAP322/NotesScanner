@@ -8,6 +8,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.dima.notesscanner.R
 import java.io.File
 
@@ -31,6 +32,12 @@ class PreviewPhotosAdapter(
 
     override fun onBindViewHolder(holder: PreviewViewHolder, position: Int) {
         val photoFile = photos[position]
+
+        Glide.with(holder.itemView.context)
+            .load(photoFile)
+            .centerCrop()
+            .placeholder(R.drawable.ic_broken_image)
+            .into(holder.ivPhoto)
 
         // Загружаем фото
         val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
