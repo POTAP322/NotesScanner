@@ -12,6 +12,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.dima.notesscanner.R
 import com.dima.notesscanner.utils.PdfGenerator
@@ -22,11 +24,13 @@ import java.io.File
 
 class PreviewFragment : Fragment() {
 
-    private lateinit var viewPager: ViewPager2
+    private lateinit var recyclerview: RecyclerView
     private lateinit var tabLayout: TabLayout
     private lateinit var pageCount: TextView
     private lateinit var btnSave: Button
     private lateinit var btnShare: Button
+    private lateinit var photosAdapter: PreviewPhotosAdapter
+    private val photosList = mutableListOf<File>()
 
     private val sharedGalleryViewModel: SharedGalleryViewModel by activityViewModels()
 
@@ -44,11 +48,11 @@ class PreviewFragment : Fragment() {
         initViews(view)
         setupToolbar(view)
         setupButtons()
-        setupViewPager()
+        setupPhotosList()
     }
 
     private fun initViews(view: View) {
-        viewPager = view.findViewById(R.id.viewPager2)
+        recyclerview = view.findViewById(R.id.recyclerView)
         tabLayout = view.findViewById(R.id.tabLayout)
         pageCount = view.findViewById(R.id.pageCount)
         btnSave = view.findViewById(R.id.btnSave)
@@ -128,13 +132,35 @@ class PreviewFragment : Fragment() {
         }
     }
 
-    private fun setupViewPager() {
+    private fun setupPhotosList() {
         val photos = sharedGalleryViewModel.allPhotos.value ?: emptyList()
-        pageCount.text = "Страниц: ${photos.size}"
+        photosList.clear()
+        photosList.addAll(photos)
 
-        if (photos.isNotEmpty()) {
-            // Позже добавишь адаптер
-            // viewPager.adapter = PhotoPagerAdapter(photos)
-        }
+        pageCount.text = "Страниц: ${photosList.size}"
+
+        // Используем RecyclerView вместо ViewPager для списка с кнопками
+        val recyclerView = view?.findViewById<RecyclerView>(R.id.recyclerView)
+        recyclerView?.layoutManager = LinearLayoutManager(requireContext())
+
+        photosAdapter = PreviewPhotosAdapter(
+            photos = photosList,
+            onMoveUp = { position ->
+                photosAdapter.moveItemUp(position)
+                updatePageNumbers()
+            },
+            onMoveDown = { position ->
+                photosAdapter.moveItemDown(position)
+                updatePageNumbers()
+            }
+        )
+
+        recyclerView?.adapter = photosAdapter
+    }
+
+    private fun updatePageNumbers() {
+        pageCount.text = "Страниц: ${photosList.size}"
+        // Сохраняем новый порядок в ViewModel
+        sharedGalleryViewModel.updatePhotosOrder(photosList)
     }
 }
