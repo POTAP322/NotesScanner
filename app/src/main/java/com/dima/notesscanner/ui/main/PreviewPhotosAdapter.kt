@@ -33,15 +33,13 @@ class PreviewPhotosAdapter(
     override fun onBindViewHolder(holder: PreviewViewHolder, position: Int) {
         val photoFile = photos[position]
 
+        // Загружаем фото
         Glide.with(holder.itemView.context)
             .load(photoFile)
             .centerCrop()
             .placeholder(R.drawable.ic_broken_image)
             .into(holder.ivPhoto)
 
-        // Загружаем фото
-        val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
-        holder.ivPhoto.setImageBitmap(bitmap)
 
 
         // ВАЖНО: Убираем старые слушатели перед установкой новых

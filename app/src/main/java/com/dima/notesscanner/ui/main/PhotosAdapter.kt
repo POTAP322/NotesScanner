@@ -31,14 +31,12 @@ class PhotosAdapter(
     override fun onBindViewHolder(holder: PhotoViewHolder, position: Int) {
         val photoFile = photos[position]
 
+        // Загружаем фото
         Glide.with(holder.itemView.context)
             .load(photoFile)
             .centerCrop()
             .placeholder(R.drawable.ic_broken_image)
             .into(holder.ivPhoto)
-
-        val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
-        holder.ivPhoto.setImageBitmap(bitmap)
 
         // Обработка нажатий
         holder.itemView.setOnClickListener {
