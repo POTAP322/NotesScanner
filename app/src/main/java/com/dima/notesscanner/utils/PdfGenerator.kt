@@ -14,83 +14,23 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ExecutionException
 
-
 class PdfGenerator(private val context: Context) {
 
     companion object {
         private const val PAGE_WIDTH = 1240
         private const val PAGE_HEIGHT = 1754
         private const val MARGIN_PERCENT = 0.05f
+        private const val JPEG_QUALITY = 70
     }
 
+    /**
+     * Сохраняет PDF в Downloads
+     */
     suspend fun savePdf(photoFiles: List<File>, fileName: String): Result<Uri> = withContext(Dispatchers.IO) {
         try {
-            val document = PdfDocument()
-
-            photoFiles.forEachIndexed { index, file ->
-                // Загружаем сразу нужного размера и сжимаем
-                val bitmap = Glide.with(context)
-                    .asBitmap()
-                    .load(file)
-                    .override(PAGE_WIDTH, PAGE_HEIGHT) // сразу нужный размер
-                    .format(DecodeFormat.PREFER_RGB_565) // меньше памяти
-                    .submit()
-                    .get()
-
-                if (bitmap != null) {
-                    val page = createPageWithMargins(document, bitmap, index + 1)
-                    document.finishPage(page)
-                    bitmap.recycle()
-                }
-            }
-
-            val resolver = context.contentResolver
-            val contentValues = android.content.ContentValues().apply {
-                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
-                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS)
-            }
-
-            val uri = resolver.insert(android.provider.MediaStore.Files.getContentUri("external"), contentValues)
-
-            uri?.let {
-                resolver.openOutputStream(it)?.use { outputStream ->
-                    document.writeTo(outputStream)
-                }
-                document.close()
-                Result.success(it)
-            } ?: Result.failure(Exception("Не удалось создать файл"))
-
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun createShareablePdf(photoFiles: List<File>): Result<Uri> = withContext(Dispatchers.IO) {
-        try {
-            val document = PdfDocument()
-
-            photoFiles.forEachIndexed { index, file ->
-                val bitmap = loadBitmapWithGlide(file)
-
-                if (bitmap != null) {
-                    val page = createPageWithMargins(document, bitmap, index + 1)
-                    document.finishPage(page)
-                    bitmap.recycle()
-                }
-            }
-
-            val pdfFile = File(context.cacheDir, "notes_${System.currentTimeMillis()}.pdf")
-            document.writeTo(FileOutputStream(pdfFile))
+            val document = generatePdfDocument(photoFiles)
+            val uri = saveToDownloads(document, fileName)
             document.close()
-            pdfFile.deleteOnExit()
-
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                pdfFile
-            )
-
             Result.success(uri)
         } catch (e: Exception) {
             Result.failure(e)
@@ -98,14 +38,49 @@ class PdfGenerator(private val context: Context) {
     }
 
     /**
-     * Загружает фото через Glide (учитывает EXIF-ориентацию)
+     * Создаёт PDF для отправки (во временной папке)
      */
-    private fun loadBitmapWithGlide(file: File): Bitmap? {
+    suspend fun createShareablePdf(photoFiles: List<File>): Result<Uri> = withContext(Dispatchers.IO) {
+        try {
+            val document = generatePdfDocument(photoFiles)
+            val uri = saveToCache(document)
+            document.close()
+            Result.success(uri)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Единый метод генерации PDF документа
+     */
+    private suspend fun generatePdfDocument(photoFiles: List<File>): PdfDocument = withContext(Dispatchers.IO) {
+        val document = PdfDocument()
+
+        photoFiles.forEachIndexed { index, file ->
+            val bitmap = loadOptimizedBitmap(file)
+
+            if (bitmap != null) {
+                val page = createPageWithMargins(document, bitmap, index + 1)
+                document.finishPage(page)
+                bitmap.recycle()
+            }
+        }
+
+        return@withContext document
+    }
+
+    /**
+     * Загружает фото с оптимизацией (размер + RGB_565)
+     */
+    private fun loadOptimizedBitmap(file: File): Bitmap? {
         return try {
             Glide.with(context)
                 .asBitmap()
                 .load(file)
-                .submit(PAGE_WIDTH, PAGE_HEIGHT) // Загружаем сразу нужного размера
+                .override(PAGE_WIDTH, PAGE_HEIGHT)
+                .format(DecodeFormat.PREFER_RGB_565)
+                .submit()
                 .get()
         } catch (e: ExecutionException) {
             e.printStackTrace()
@@ -114,6 +89,42 @@ class PdfGenerator(private val context: Context) {
             e.printStackTrace()
             null
         }
+    }
+
+    /**
+     * Сохраняет PDF в Downloads
+     */
+    private fun saveToDownloads(document: PdfDocument, fileName: String): Uri {
+        val resolver = context.contentResolver
+        val contentValues = android.content.ContentValues().apply {
+            put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+            put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS)
+        }
+
+        val uri = resolver.insert(android.provider.MediaStore.Files.getContentUri("external"), contentValues)
+            ?: throw Exception("Не удалось создать файл")
+
+        resolver.openOutputStream(uri)?.use { outputStream ->
+            document.writeTo(outputStream)
+        }
+
+        return uri
+    }
+
+    /**
+     * Сохраняет PDF в cache для отправки
+     */
+    private fun saveToCache(document: PdfDocument): Uri {
+        val pdfFile = File(context.cacheDir, "notes_${System.currentTimeMillis()}.pdf")
+        document.writeTo(FileOutputStream(pdfFile))
+        pdfFile.deleteOnExit()
+
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            pdfFile
+        )
     }
 
     private fun createPageWithMargins(
@@ -128,9 +139,7 @@ class PdfGenerator(private val context: Context) {
         val availableHeight = PAGE_HEIGHT - (marginY * 2)
 
         val scaledBitmap = scaleBitmapToFit(bitmap, availableWidth, availableHeight)
-
-        // СЖАТИЕ: конвертируем в JPEG с качеством 70%
-        val compressedBitmap = compressBitmap(scaledBitmap, 70)
+        val compressedBitmap = compressBitmap(scaledBitmap, JPEG_QUALITY)
 
         val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNumber).create()
         val page = document.startPage(pageInfo)
@@ -141,17 +150,13 @@ class PdfGenerator(private val context: Context) {
         page.canvas.drawBitmap(compressedBitmap, left.toFloat(), top.toFloat(), null)
 
         // Очищаем память
-        if (compressedBitmap != scaledBitmap) {
-            compressedBitmap.recycle()
-        }
-        if (scaledBitmap != bitmap) {
-            scaledBitmap.recycle()
-        }
+        if (compressedBitmap != scaledBitmap) compressedBitmap.recycle()
+        if (scaledBitmap != bitmap) scaledBitmap.recycle()
 
         return page
     }
 
-    private fun compressBitmap(bitmap: Bitmap, quality: Int = 70): Bitmap {
+    private fun compressBitmap(bitmap: Bitmap, quality: Int): Bitmap {
         val stream = java.io.ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream)
         val byteArray = stream.toByteArray()
