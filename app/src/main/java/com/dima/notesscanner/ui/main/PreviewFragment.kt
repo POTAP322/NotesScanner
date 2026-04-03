@@ -107,30 +107,37 @@ class PreviewFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            lifecycleScope.launch {
-                val progressDialog = android.app.ProgressDialog(requireContext()).apply {
-                    setMessage("Подготовка к отправке...")
-                    setCancelable(false)
-                    show()
-                }
-
-                val generator = PdfGenerator(requireContext())
-                val result = generator.createShareablePdf(photos)
-
-                progressDialog.dismiss()
-
-                result.onSuccess { uri ->
-                    // Создаем Intent для отправки
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "application/pdf"
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            FileNameDialog(requireContext()).show { fileName ->
+                lifecycleScope.launch {
+                    val progressDialog = android.app.ProgressDialog(requireContext()).apply {
+                        setMessage("Подготовка к отправке...")
+                        setCancelable(false)
+                        show()
                     }
-                    startActivity(Intent.createChooser(shareIntent, "Отправить PDF"))
-                }.onFailure { error ->
-                    Toast.makeText(requireContext(), "Ошибка: ${error.message}", Toast.LENGTH_SHORT).show()
+
+                    val generator = PdfGenerator(requireContext())
+                    val result = generator.createShareablePdf(photos, fileName)
+
+                    progressDialog.dismiss()
+
+                    result.onSuccess { uri ->
+                        // Создаем Intent для отправки
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "application/pdf"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        startActivity(Intent.createChooser(shareIntent, "Отправить PDF"))
+                    }.onFailure { error ->
+                        Toast.makeText(
+                            requireContext(),
+                            "Ошибка: ${error.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
+
         }
     }
 

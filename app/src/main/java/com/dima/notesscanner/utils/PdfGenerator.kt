@@ -40,10 +40,10 @@ class PdfGenerator(private val context: Context) {
     /**
      * Создаёт PDF для отправки (во временной папке)
      */
-    suspend fun createShareablePdf(photoFiles: List<File>): Result<Uri> = withContext(Dispatchers.IO) {
+    suspend fun createShareablePdf(photoFiles: List<File>,fileName: String): Result<Uri> = withContext(Dispatchers.IO) {
         try {
             val document = generatePdfDocument(photoFiles)
-            val uri = saveToCache(document)
+            val uri = saveToCache(document,fileName)
             document.close()
             Result.success(uri)
         } catch (e: Exception) {
@@ -63,7 +63,7 @@ class PdfGenerator(private val context: Context) {
             if (bitmap != null) {
                 val page = createPageWithMargins(document, bitmap, index + 1)
                 document.finishPage(page)
-                bitmap.recycle()
+                //bitmap.recycle()
             }
         }
 
@@ -115,8 +115,8 @@ class PdfGenerator(private val context: Context) {
     /**
      * Сохраняет PDF в cache для отправки
      */
-    private fun saveToCache(document: PdfDocument): Uri {
-        val pdfFile = File(context.cacheDir, "notes_${System.currentTimeMillis()}.pdf")
+    private fun saveToCache(document: PdfDocument, fileName: String): Uri {
+        val pdfFile = File(context.cacheDir, fileName)
         document.writeTo(FileOutputStream(pdfFile))
         pdfFile.deleteOnExit()
 
@@ -150,8 +150,8 @@ class PdfGenerator(private val context: Context) {
         page.canvas.drawBitmap(compressedBitmap, left.toFloat(), top.toFloat(), null)
 
         // Очищаем память
-        if (compressedBitmap != scaledBitmap) compressedBitmap.recycle()
-        if (scaledBitmap != bitmap) scaledBitmap.recycle()
+//        if (compressedBitmap != scaledBitmap) compressedBitmap.recycle()
+//        if (scaledBitmap != bitmap) scaledBitmap.recycle()
 
         return page
     }
