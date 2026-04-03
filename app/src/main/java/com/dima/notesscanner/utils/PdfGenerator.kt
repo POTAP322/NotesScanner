@@ -14,6 +14,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ExecutionException
 
+
 class PdfGenerator(private val context: Context) {
 
     companion object {
@@ -22,7 +23,7 @@ class PdfGenerator(private val context: Context) {
         private const val MARGIN_PERCENT = 0.05f
     }
 
-    suspend fun savePdf(photoFiles: List<File>): Result<Uri> = withContext(Dispatchers.IO) {
+    suspend fun savePdf(photoFiles: List<File>, fileName: String): Result<Uri> = withContext(Dispatchers.IO) {
         try {
             val document = PdfDocument()
 
@@ -45,7 +46,7 @@ class PdfGenerator(private val context: Context) {
 
             val resolver = context.contentResolver
             val contentValues = android.content.ContentValues().apply {
-                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "notes_${System.currentTimeMillis()}.pdf")
+                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                 put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
                 put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS)
             }
@@ -82,6 +83,7 @@ class PdfGenerator(private val context: Context) {
             val pdfFile = File(context.cacheDir, "notes_${System.currentTimeMillis()}.pdf")
             document.writeTo(FileOutputStream(pdfFile))
             document.close()
+            pdfFile.deleteOnExit()
 
             val uri = FileProvider.getUriForFile(
                 context,

@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.dima.notesscanner.R
+import com.dima.notesscanner.utils.FileNameDialog
 import com.dima.notesscanner.utils.PdfGenerator
 import com.dima.notesscanner.viewmodel.SharedGalleryViewModel
 import com.google.android.material.tabs.TabLayout
@@ -71,28 +72,29 @@ class PreviewFragment : Fragment() {
             val photos = sharedGalleryViewModel.allPhotos.value
 
             if (photos.isNullOrEmpty()) {
-                Toast.makeText(requireContext(), "Нет фото для сохранения", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Нет фото для сохранения", Toast.LENGTH_SHORT)
+                    .show()
                 return@setOnClickListener
             }
 
-            lifecycleScope.launch {
-                val progressDialog = android.app.ProgressDialog(requireContext()).apply {
-                    setMessage("Создание PDF...")
-                    setCancelable(false)
-                    show()
-                }
+            FileNameDialog(requireContext()).show { fileName ->
+                lifecycleScope.launch {
+                    val progressDialog = android.app.ProgressDialog(requireContext()).apply {
+                        setMessage("Создание PDF...")
+                        setCancelable(false)
+                        show()
+                    }
 
-                val generator = PdfGenerator(requireContext())
-                val result = generator.savePdf(photos)
+                    val generator = PdfGenerator(requireContext())
+                    val result = generator.savePdf(photos, fileName)
 
-                progressDialog.dismiss()
+                    progressDialog.dismiss()
 
-                result.onSuccess { uri ->
-                    // Извлекаем имя файла из Uri
-                    val fileName = uri.lastPathSegment?.substringAfterLast('/') ?: "PDF"
-                    Toast.makeText(requireContext(), "PDF сохранен: $fileName", Toast.LENGTH_SHORT).show()
-                }.onFailure { error ->
-                    Toast.makeText(requireContext(), "Ошибка сохранения: ${error.message}", Toast.LENGTH_SHORT).show()
+                    result.onSuccess { uri ->
+                        Toast.makeText(requireContext(), "PDF сохранен: $fileName", Toast.LENGTH_LONG).show()
+                    }.onFailure { error ->
+                        Toast.makeText(requireContext(), "Ошибка: ${error.message}", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
