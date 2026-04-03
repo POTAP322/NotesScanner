@@ -62,8 +62,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="💾 Сохранить"
-            android:layout_marginEnd="8dp"
-            />
+            android:layout_marginEnd="8dp" />
 
         <Button
             android:id="@+id/btnShare"
@@ -71,7 +70,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="📤 Отправить"
-           />
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnFinish"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✅ Завершить" />
 
     </LinearLayout>
 

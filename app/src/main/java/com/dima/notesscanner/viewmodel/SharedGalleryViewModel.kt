@@ -40,4 +40,8 @@ class SharedGalleryViewModel : ViewModel() {
     fun updatePhotosOrder(newOrder: List<File>) {
         _allPhotos.value = newOrder
     }
+    fun clearAllPhotos() {
+        _allPhotos.value = emptyList()
+        _capturedPhotos.value = emptyList()
+    }
 }

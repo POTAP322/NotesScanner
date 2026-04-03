@@ -48,6 +48,12 @@
         android:id="@+id/previewFragment"
         android:name="com.dima.notesscanner.ui.main.PreviewFragment" >
 
+        <action
+            android:id="@+id/action_preview_to_main"
+            app:destination="@id/mainFragment"
+            app:popUpTo="@id/mainFragment"
+            app:popUpToInclusive="true" />
+
     </fragment>
 
     <fragment

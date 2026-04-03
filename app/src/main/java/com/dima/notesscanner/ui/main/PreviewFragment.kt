@@ -30,6 +30,7 @@ class PreviewFragment : Fragment() {
     private lateinit var pageCount: TextView
     private lateinit var btnSave: Button
     private lateinit var btnShare: Button
+    private lateinit var btnFinish: Button
     private lateinit var photosAdapter: PreviewPhotosAdapter
     private val photosList = mutableListOf<File>()
 
@@ -58,6 +59,7 @@ class PreviewFragment : Fragment() {
         pageCount = view.findViewById(R.id.pageCount)
         btnSave = view.findViewById(R.id.btnSave)
         btnShare = view.findViewById(R.id.btnShare)
+        btnFinish = view.findViewById(R.id.btnFinish)
     }
 
     private fun setupToolbar(view: View) {
@@ -139,6 +141,11 @@ class PreviewFragment : Fragment() {
             }
 
         }
+        btnFinish.setOnClickListener {
+            finishAndClean()
+        }
+
+
     }
 
     private fun setupPhotosList() {
@@ -171,5 +178,28 @@ class PreviewFragment : Fragment() {
         pageCount.text = "Страниц: ${photosList.size}"
         // Сохраняем новый порядок в ViewModel
         sharedGalleryViewModel.updatePhotosOrder(photosList)
+    }
+
+    private fun finishAndClean() {
+        //Получаем все фото
+        val photos = sharedGalleryViewModel.allPhotos.value ?: emptyList()
+        //Удаляем файлы с диска
+        var deletedCount = 0
+        photos.forEach { photoFile ->
+            try {
+                if (photoFile.exists()) {
+                    photoFile.delete()
+                    deletedCount++
+                }
+            } catch (e: Exception) {
+                // Игнорируем ошибки удаления
+            }
+        }
+        //Очищаем ViewModel
+        sharedGalleryViewModel.clearAllPhotos()
+        //Показываем сообщение
+        Toast.makeText(requireContext(), "Удалено $deletedCount фото", Toast.LENGTH_SHORT).show()
+        //Переходим на главный экран
+        findNavController().navigate(R.id.action_preview_to_main)
     }
 }
