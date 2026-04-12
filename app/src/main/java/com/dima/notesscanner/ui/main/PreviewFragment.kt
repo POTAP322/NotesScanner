@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -181,9 +182,22 @@ class PreviewFragment : Fragment() {
     }
 
     private fun finishAndClean() {
-        //Получаем все фото
+        // Диалог подтверждения
+        AlertDialog.Builder(requireContext())
+            .setTitle("Завершить сессию")
+            .setMessage("Все несохранённые фото будут удалены.")
+            .setPositiveButton("Завершить") { _, _ ->
+                performCleanup()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun performCleanup() {
+        // Получаем все фото
         val photos = sharedGalleryViewModel.allPhotos.value ?: emptyList()
-        //Удаляем файлы с диска
+
+        // Удаляем файлы с диска
         var deletedCount = 0
         photos.forEach { photoFile ->
             try {
@@ -195,11 +209,14 @@ class PreviewFragment : Fragment() {
                 // Игнорируем ошибки удаления
             }
         }
-        //Очищаем ViewModel
+
+        // Очищаем ViewModel
         sharedGalleryViewModel.clearAllPhotos()
-        //Показываем сообщение
+
+        // Показываем сообщение
         Toast.makeText(requireContext(), "Удалено $deletedCount фото", Toast.LENGTH_SHORT).show()
-        //Переходим на главный экран
+
+        // Переходим на главный экран
         findNavController().navigate(R.id.action_preview_to_main)
     }
 }
