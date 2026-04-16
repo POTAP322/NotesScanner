@@ -44,4 +44,9 @@ class SharedGalleryViewModel : ViewModel() {
         _allPhotos.value = emptyList()
         _capturedPhotos.value = emptyList()
     }
+    fun notifyPhotoChanged(updatedFile: File) {
+        val current = _allPhotos.value?.toMutableList() ?: return
+        // Обновляем список, чтобы триггерить observer
+        _allPhotos.value = current
+    }
 }

@@ -15,6 +15,8 @@ import androidx.navigation.fragment.findNavController
 import java.io.File
 import com.dima.notesscanner.viewmodel.SharedGalleryViewModel
 import androidx.fragment.app.activityViewModels
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 
 class ImageProcessingFragment : Fragment() {
 
@@ -34,22 +36,16 @@ class ImageProcessingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Настраиваем RecyclerView (создаём адаптер с пустым списком)
         setupRecyclerView(view)
 
-        // 2. Подписываемся на ВСЕ фото (чтобы список не исчезал)
         sharedGalleryViewModel.allPhotos.observe(viewLifecycleOwner) { allPhotos ->
-            // Полностью обновляем список
             photosList.clear()
             photosList.addAll(allPhotos)
             adapter.notifyDataSetChanged()
         }
 
-        // 3. Подписываемся на НОВЫЕ фото из камеры
         sharedGalleryViewModel.capturedPhotos.observe(viewLifecycleOwner) { newPhotos ->
             if (newPhotos.isNotEmpty()) {
-                // Новые фото уже автоматически попадут в allPhotos,
-                // так что отдельно добавлять не нужно
                 sharedGalleryViewModel.clearPhotos()
             }
         }

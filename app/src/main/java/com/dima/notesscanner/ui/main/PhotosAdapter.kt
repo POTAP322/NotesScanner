@@ -9,6 +9,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.dima.notesscanner.R
 import java.io.File
 
@@ -31,9 +32,11 @@ class PhotosAdapter(
     override fun onBindViewHolder(holder: PhotoViewHolder, position: Int) {
         val photoFile = photos[position]
 
-        // Загружаем фото
+        // Загружаем фото без кэша
         Glide.with(holder.itemView.context)
             .load(photoFile)
+            .diskCacheStrategy(DiskCacheStrategy.NONE)
+            .skipMemoryCache(true)
             .centerCrop()
             .placeholder(R.drawable.ic_broken_image)
             .into(holder.ivPhoto)

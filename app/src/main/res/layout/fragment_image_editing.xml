@@ -2,16 +2,28 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- Верхняя панель с кнопками (вместо заголовка) -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Редактирование фото"
-        android:layout_marginBottom="8dp" />
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
+        <ImageButton
+            android:id="@+id/btnCrop"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_crop"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Обрезать" />
 
+    </LinearLayout>
+
+    <!-- Фото (занимает всё свободное место) -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -24,31 +36,43 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:scaleType="fitCenter"
-            android:adjustViewBounds="true"/>
+            android:adjustViewBounds="true" />
 
     </FrameLayout>
 
+    <!-- Ползунки для яркости/контраста -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:padding="16dp"
+        android:background="#FFFFFF"
+        android:elevation="4dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="65dp"
+                android:layout_height="wrap_content"
+                android:text="Яркость"
+                android:textSize="14sp" />
 
             <SeekBar
+                android:id="@+id/sbBrightness"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                android:max="200"
+                android:progress="100" />
 
             <Button
+                android:id="@+id/btnApplyBrightness"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Применить" />
@@ -57,73 +81,42 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="65dp"
+                android:layout_height="wrap_content"
+                android:text="Контраст"
+                android:textSize="14sp" />
 
             <SeekBar
+                android:id="@+id/sbContrast"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                android:max="200"
+                android:progress="100" />
 
             <Button
+                android:id="@+id/btnApplyContrast"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Применить" />
 
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <SeekBar
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Применить" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <SeekBar
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Применить" />
-
-        </LinearLayout>
-
-
-
-
 
     </LinearLayout>
+
+    <!-- Кнопка назад -->
     <Button
         android:id="@+id/btnBack"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="← Назад" />
+        android:text="← Назад"
+        android:layout_margin="16dp" />
 
 </LinearLayout>
