@@ -15,16 +15,28 @@ class SharedGalleryViewModel : ViewModel() {
     private val _allPhotos = MutableLiveData<List<File>>(emptyList())
     val allPhotos: LiveData<List<File>> = _allPhotos
 
-    fun addPhoto(photoFile: File) {
-        // Добавляем во временный список (для камеры)
-        val currentCaptured = _capturedPhotos.value?.toMutableList() ?: mutableListOf()
-        currentCaptured.add(photoFile)
-        _capturedPhotos.value = currentCaptured
+    // Временное хранилище для фото во время съёмки
+    private val tempPhotos = mutableListOf<File>()
 
-        // Добавляем в постоянный список
+    fun addTempPhoto(photoFile: File) {
+        tempPhotos.add(photoFile)
+        // Обновляем capturedPhotos для отображения в камере (если нужно)
+        _capturedPhotos.value = tempPhotos.toList()
+    }
+
+    fun commitPhotos() {
+        // При нажатии "Готово" переносим временные фото в постоянный список
         val currentAll = _allPhotos.value?.toMutableList() ?: mutableListOf()
-        currentAll.add(photoFile)
+        currentAll.addAll(tempPhotos)
         _allPhotos.value = currentAll
+        tempPhotos.clear()
+        _capturedPhotos.value = emptyList()
+    }
+
+    fun cancelTempPhotos() {
+        // При нажатии "Назад" удаляем временные фото
+        tempPhotos.clear()
+        _capturedPhotos.value = emptyList()
     }
 
     fun removePhoto(photoFile: File) {

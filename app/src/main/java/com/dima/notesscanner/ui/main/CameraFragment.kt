@@ -55,18 +55,7 @@ class CameraFragment : Fragment() {
             startCamera()
         }
 
-        view.findViewById<Button>(R.id.btnBack2).setOnClickListener {
-            findNavController().navigate(R.id.action_camera_to_image_processing)
-        }
-        view.findViewById<ImageButton>(R.id.btnCapture).setOnClickListener {
-            takePhoto()
-        }
-        view.findViewById<ImageButton>(R.id.btnFlash).setOnClickListener {
-            toggleFlash()
-        }
-        view.findViewById<Button>(R.id.btnDone).setOnClickListener {
-            findNavController().navigate(R.id.action_camera_to_image_processing)
-        }
+        setupButtons(view)
 
     }
 
@@ -132,7 +121,6 @@ class CameraFragment : Fragment() {
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
 
-        // Создаём временный файл для фото
         val photoFile = File(
             requireContext().externalMediaDirs.first(),
             "${System.currentTimeMillis()}.jpg"
@@ -145,12 +133,9 @@ class CameraFragment : Fragment() {
             ContextCompat.getMainExecutor(requireContext()),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
-
-                    // Передаём фото в ViewModel
-                    sharedGalleryViewModel.addPhoto(photoFile)
-
-                    Toast.makeText(requireContext(), "Фото сохранено", Toast.LENGTH_SHORT).show()
+                    // Добавляем во временное хранилище
+                    sharedGalleryViewModel.addTempPhoto(photoFile)
+                    Toast.makeText(requireContext(), "Фото сделано", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onError(exception: ImageCaptureException) {
@@ -196,5 +181,27 @@ class CameraFragment : Fragment() {
         private val CAMERAX_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,
         )
+    }
+
+    private fun setupButtons(view: View) {
+        view.findViewById<Button>(R.id.btnBack2).setOnClickListener {
+            // Отмена: удаляем временные фото
+            sharedGalleryViewModel.cancelTempPhotos()
+            findNavController().navigate(R.id.action_camera_to_image_processing)
+        }
+
+        view.findViewById<ImageButton>(R.id.btnCapture).setOnClickListener {
+            takePhoto()
+        }
+
+        view.findViewById<ImageButton>(R.id.btnFlash).setOnClickListener {
+            toggleFlash()
+        }
+
+        view.findViewById<Button>(R.id.btnDone).setOnClickListener {
+            // Готово: сохраняем временные фото в постоянное хранилище
+            sharedGalleryViewModel.commitPhotos()
+            findNavController().navigate(R.id.action_camera_to_image_processing)
+        }
     }
 }
