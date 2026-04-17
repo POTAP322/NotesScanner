@@ -31,6 +31,7 @@ import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -129,7 +130,12 @@ class ImageEditingFragment : Fragment() {
                     guidelines = CropImageView.Guidelines.ON,
                     fixAspectRatio = false,
                     outputCompressFormat = Bitmap.CompressFormat.JPEG,
-                    outputCompressQuality = 90
+                    outputCompressQuality = 90,
+                    toolbarColor = ContextCompat.getColor(requireContext(), R.color.gray),
+                    toolbarTitleColor = ContextCompat.getColor(requireContext(), R.color.white),
+                    toolbarBackButtonColor = ContextCompat.getColor(requireContext(), R.color.white),
+                    activityBackgroundColor = ContextCompat.getColor(requireContext(), R.color.white)
+
                 )
             )
         )
