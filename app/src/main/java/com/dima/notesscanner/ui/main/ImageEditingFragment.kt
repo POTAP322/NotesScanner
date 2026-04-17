@@ -25,10 +25,10 @@ import java.io.File
 import java.io.FileOutputStream
 import com.dima.notesscanner.viewmodel.SharedGalleryViewModel
 
-
 class ImageEditingFragment : Fragment() {
 
     private lateinit var photoFile: File
+    private var originalPhotoFile: File? = null  // Сохраняем копию для отмены
     private val sharedGalleryViewModel: SharedGalleryViewModel by activityViewModels()
 
     override fun onCreateView(
@@ -44,11 +44,13 @@ class ImageEditingFragment : Fragment() {
         val photoPath = arguments?.getString("photoPath")
         if (photoPath != null) {
             photoFile = File(photoPath)
+            // Создаём копию оригинального файла для отмены
+            originalPhotoFile = File(requireContext().cacheDir, "backup_${System.currentTimeMillis()}.jpg")
+            photoFile.copyTo(originalPhotoFile!!, overwrite = true)
         }
 
         val ivPhoto: ImageView = view.findViewById(R.id.mainImage)
 
-        // Загружаем фото без кэша
         Glide.with(ivPhoto.context)
             .load(photoPath)
             .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -65,20 +67,15 @@ class ImageEditingFragment : Fragment() {
             val croppedImageUri = result.uriContent
             if (croppedImageUri != null && ::photoFile.isInitialized) {
                 try {
-                    // 1. Сохраняем обрезанное изображение
                     val inputStream = requireContext().contentResolver.openInputStream(croppedImageUri)
                     val outputStream = FileOutputStream(photoFile)
                     inputStream?.copyTo(outputStream)
                     inputStream?.close()
                     outputStream.close()
 
-                    // 2. Уведомляем ViewModel об изменении файла
                     sharedGalleryViewModel.notifyPhotoChanged(photoFile)
 
-                    // 3. Обновляем ImageView в фрагменте
                     val ivPhoto: ImageView = requireView().findViewById(R.id.mainImage)
-
-                    // Очищаем кэш Glide для этого файла
                     Glide.with(this)
                         .load(photoFile)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -97,7 +94,22 @@ class ImageEditingFragment : Fragment() {
     }
 
     private fun setupButtons(view: View) {
+        // Кнопка "Назад" отменяем изменения
         view.findViewById<Button>(R.id.btnBack).setOnClickListener {
+            // Восстанавливаем оригинальный файл
+            originalPhotoFile?.let { backup ->
+                if (backup.exists()) {
+                    backup.copyTo(photoFile, overwrite = true)
+                    backup.delete()
+                    sharedGalleryViewModel.notifyPhotoChanged(photoFile)
+                }
+            }
+            findNavController().navigate(R.id.action_image_editing_to_image_processing)
+        }
+
+        // Кнопка "Готово" — сохраняем изменения и удаляем бэкап
+        view.findViewById<Button>(R.id.btnDone).setOnClickListener {
+            originalPhotoFile?.delete()  // Удаляем бэкап
             findNavController().navigate(R.id.action_image_editing_to_image_processing)
         }
 

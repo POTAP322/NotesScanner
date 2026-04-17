@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- Верхняя панель с кнопками (вместо заголовка) -->
+    <!-- Верхняя панель с кнопками -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,13 +17,12 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:src="@drawable/ic_crop"
-            android:layout_marginStart="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Обрезать" />
 
     </LinearLayout>
 
-    <!-- Фото (занимает всё свободное место) -->
+    <!-- Фото -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -49,6 +48,7 @@
         android:background="#FFFFFF"
         android:elevation="4dp">
 
+        <!-- Яркость -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -67,18 +67,21 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp"
                 android:max="200"
                 android:progress="100" />
 
-            <Button
-                android:id="@+id/btnApplyBrightness"
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/tvBrightnessValue"
+                android:layout_width="40dp"
                 android:layout_height="wrap_content"
-                android:text="Применить" />
+                android:text="100"
+                android:textSize="14sp"
+                android:textAlignment="center"
+                android:layout_marginStart="8dp" />
 
         </LinearLayout>
 
+        <!-- Контраст -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -97,26 +100,44 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp"
                 android:max="200"
                 android:progress="100" />
 
-            <Button
-                android:id="@+id/btnApplyContrast"
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/tvContrastValue"
+                android:layout_width="40dp"
                 android:layout_height="wrap_content"
-                android:text="Применить" />
+                android:text="100"
+                android:textSize="14sp"
+                android:textAlignment="center"
+                android:layout_marginStart="8dp" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Кнопка назад -->
-    <Button
-        android:id="@+id/btnBack"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="← Назад"
-        android:layout_margin="16dp" />
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="← Назад"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnDone"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✓ Готово" />
+
+    </LinearLayout>
 
 </LinearLayout>
