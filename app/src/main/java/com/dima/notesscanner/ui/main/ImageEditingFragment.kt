@@ -41,6 +41,7 @@ class ImageEditingFragment : Fragment() {
     private lateinit var photoFile: File
     private var originalPhotoFile: File? = null  // Сохраняем копию для отмены
     private val sharedGalleryViewModel: SharedGalleryViewModel by activityViewModels()
+    private var isApplying = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -135,6 +136,15 @@ class ImageEditingFragment : Fragment() {
     }
 
     private fun applyBrightnessAndContrast(brightnessValue: Int, contrastValue: Int) {
+        // Защита от повторного вызова
+        if (isApplying) {
+            Toast.makeText(requireContext(), "Подождите, предыдущая операция ещё не завершена", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        isApplying = true
+
+        // Показываем прогресс
         val progressDialog = android.app.ProgressDialog(requireContext()).apply {
             setMessage("Применение эффектов...")
             setCancelable(false)
@@ -143,10 +153,11 @@ class ImageEditingFragment : Fragment() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Загружаем Bitmap через Glide
+                // Загружаем Bitmap с уменьшенным разрешением для обработки
                 val originalBitmap = Glide.with(this@ImageEditingFragment)
                     .asBitmap()
                     .load(originalPhotoFile ?: photoFile)
+                    .override(1024, 1024)  // Уменьшаем размер для обработки (быстрее)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .skipMemoryCache(true)
                     .submit()
@@ -155,6 +166,7 @@ class ImageEditingFragment : Fragment() {
                 if (originalBitmap != null) {
                     val resultBitmap = applyColorMatrix(originalBitmap, brightnessValue, contrastValue)
 
+                    // Сохраняем в файл
                     val outputStream = FileOutputStream(photoFile)
                     resultBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
                     outputStream.close()
@@ -165,7 +177,9 @@ class ImageEditingFragment : Fragment() {
 
                     withContext(Dispatchers.Main) {
                         progressDialog.dismiss()
+                        isApplying = false
 
+                        // Обновляем ImageView
                         val ivPhoto: ImageView = requireView().findViewById(R.id.mainImage)
                         Glide.with(this@ImageEditingFragment)
                             .load(photoFile)
@@ -179,12 +193,14 @@ class ImageEditingFragment : Fragment() {
                 } else {
                     withContext(Dispatchers.Main) {
                         progressDialog.dismiss()
+                        isApplying = false
                         Toast.makeText(requireContext(), "Ошибка загрузки фото", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     progressDialog.dismiss()
+                    isApplying = false
                     Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
