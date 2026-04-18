@@ -1,7 +1,6 @@
 package com.dima.notesscanner.ui.main
 
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -26,16 +25,14 @@ import java.io.FileOutputStream
 import com.dima.notesscanner.viewmodel.SharedGalleryViewModel
 import android.widget.SeekBar
 import android.widget.TextView
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
-import android.graphics.Paint
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.opencv.android.Utils
+import org.opencv.core.Mat
+import androidx.core.graphics.createBitmap
 
 class ImageEditingFragment : Fragment() {
 
@@ -99,7 +96,6 @@ class ImageEditingFragment : Fragment() {
                         .skipMemoryCache(true)
                         .into(ivPhoto)
 
-                    Toast.makeText(requireContext(), "Изображение обрезано", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
                     Toast.makeText(requireContext(), "Ошибка при сохранении: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -162,7 +158,7 @@ class ImageEditingFragment : Fragment() {
                 // Загружаем Bitmap с уменьшенным разрешением для обработки
                 val originalBitmap = Glide.with(this@ImageEditingFragment)
                     .asBitmap()
-                    .load(originalPhotoFile ?: photoFile)
+                    .load(photoFile)
                     .override(1024, 1024)  // Уменьшаем размер для обработки (быстрее)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .skipMemoryCache(true)
@@ -170,7 +166,7 @@ class ImageEditingFragment : Fragment() {
                     .get()
 
                 if (originalBitmap != null) {
-                    val resultBitmap = applyColorMatrix(originalBitmap, brightnessValue, contrastValue)
+                    val resultBitmap = applyBrightnessAndContrast(originalBitmap, brightnessValue, contrastValue)
 
                     // Сохраняем в файл
                     val outputStream = FileOutputStream(photoFile)
@@ -194,7 +190,6 @@ class ImageEditingFragment : Fragment() {
                             .into(ivPhoto)
 
                         sharedGalleryViewModel.notifyPhotoChanged(photoFile)
-                        Toast.makeText(requireContext(), "Эффекты применены", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     withContext(Dispatchers.Main) {
@@ -213,38 +208,29 @@ class ImageEditingFragment : Fragment() {
         }
     }
 
-    private fun applyColorMatrix(bitmap: Bitmap, brightnessValue: Int, contrastValue: Int): Bitmap {
-        // Преобразуем значения пользователя (-100..100) в коэффициенты
-        val brightness = 1.0f + (brightnessValue / 100.0f)  // 0.0..2.0, 1.0 = норма
-        val contrast = 1.0f + (contrastValue / 100.0f)      // 0.0..2.0, 1.0 = норма
+    private fun applyBrightnessAndContrast(originalBitmap: Bitmap, brightnessValue: Int, contrastValue: Int): Bitmap {
 
-        // Создаём матрицу яркости
-        val brightnessMatrix = ColorMatrix().apply {
-            setScale(brightness, brightness, brightness, 1.0f)
-        }
+        val contrast = 1.0 + (contrastValue / 100.0)
+        val brightness = brightnessValue.toDouble()
 
-        // Создаём матрицу контраста
-        val contrastMatrix = ColorMatrix().apply {
-            setScale(contrast, contrast, contrast, 1.0f)
-        }
+        val sourceMat = Mat()
+        Utils.bitmapToMat(originalBitmap,sourceMat)
 
-        // Объединяем матрицы
-        val colorMatrix = ColorMatrix()
-        colorMatrix.setConcat(contrastMatrix, brightnessMatrix)
+        val destinationMat = Mat()
 
-        // Создаём фильтр
-        val filter = ColorMatrixColorFilter(colorMatrix)
+        //формула g(x) = alpha * f(x) + beta
+        sourceMat.convertTo(destinationMat,-1,contrast,brightness)
 
-        // Создаём пустой Bitmap для результата
-        val resultBitmap = Bitmap.createBitmap(bitmap.width, bitmap.height, bitmap.config ?: Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(resultBitmap)
-        val paint = android.graphics.Paint().apply {
-            colorFilter = filter
-        }
+        val resultBitmap = createBitmap(destinationMat.cols(), destinationMat.rows(), Bitmap.Config.ARGB_8888)
 
-        canvas.drawBitmap(bitmap, 0f, 0f, paint)
+        Utils.matToBitmap(destinationMat,resultBitmap)
+
+        sourceMat.release()
+        destinationMat.release()
+
 
         return resultBitmap
+
     }
 
     private fun setupButtons(view: View) {
