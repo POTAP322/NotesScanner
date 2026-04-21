@@ -37,7 +37,9 @@ import androidx.core.graphics.createBitmap
 class ImageEditingFragment : Fragment() {
 
     private lateinit var photoFile: File
-    private var originalPhotoFile: File? = null  // Сохраняем копию для отмены
+    private var originalPhotoFile: File? = null   // Для кнопки "Назад"
+    private var basePhotoFile: File? = null       // Для ползунков (обновляется после обрезки)
+
     private val sharedGalleryViewModel: SharedGalleryViewModel by activityViewModels()
     private var isApplying = false
 
@@ -54,9 +56,12 @@ class ImageEditingFragment : Fragment() {
         val photoPath = arguments?.getString("photoPath")
         if (photoPath != null) {
             photoFile = File(photoPath)
-            // Создаём копию оригинального файла для отмены
-            originalPhotoFile = File(requireContext().cacheDir, "backup_${System.currentTimeMillis()}.jpg")
+            // Оригинал (не меняется)
+            originalPhotoFile = File(requireContext().cacheDir, "backup_original_${System.currentTimeMillis()}.jpg")
             photoFile.copyTo(originalPhotoFile!!, overwrite = true)
+            // База для ползунков (меняется после обрезки)
+            basePhotoFile = File(requireContext().cacheDir, "backup_base_${System.currentTimeMillis()}.jpg")
+            photoFile.copyTo(basePhotoFile!!, overwrite = true)
         }
 
         val ivPhoto: ImageView = view.findViewById(R.id.mainImage)
@@ -86,6 +91,11 @@ class ImageEditingFragment : Fragment() {
                     inputStream?.copyTo(outputStream)
                     inputStream?.close()
                     outputStream.close()
+
+                    // Обновляем только basePhotoFile
+                    basePhotoFile?.delete()
+                    basePhotoFile = File(requireContext().cacheDir, "backup_base_${System.currentTimeMillis()}.jpg")
+                    photoFile.copyTo(basePhotoFile!!, overwrite = true)
 
                     sharedGalleryViewModel.notifyPhotoChanged(photoFile)
 
@@ -158,7 +168,7 @@ class ImageEditingFragment : Fragment() {
                 // Загружаем Bitmap с уменьшенным разрешением для обработки
                 val originalBitmap = Glide.with(this@ImageEditingFragment)
                     .asBitmap()
-                    .load(photoFile)
+                    .load(basePhotoFile ?: photoFile)  // ← загружаем basePhotoFile
                     .override(1024, 1024)  // Уменьшаем размер для обработки (быстрее)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .skipMemoryCache(true)
@@ -240,7 +250,8 @@ class ImageEditingFragment : Fragment() {
             originalPhotoFile?.let { backup ->
                 if (backup.exists()) {
                     backup.copyTo(photoFile, overwrite = true)
-                    backup.delete()
+                    // Также обновляем basePhotoFile
+                    backup.copyTo(basePhotoFile!!, overwrite = true)
                     sharedGalleryViewModel.notifyPhotoChanged(photoFile)
                 }
             }
@@ -249,7 +260,8 @@ class ImageEditingFragment : Fragment() {
 
         // Кнопка "Готово" — сохраняем изменения и удаляем бэкап
         view.findViewById<Button>(R.id.btnDone).setOnClickListener {
-            originalPhotoFile?.delete()  // Удаляем бэкап
+            originalPhotoFile?.delete()
+            basePhotoFile?.delete()
             findNavController().navigate(R.id.action_image_editing_to_image_processing)
         }
 
