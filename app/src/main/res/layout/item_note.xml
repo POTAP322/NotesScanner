@@ -8,11 +8,13 @@
     android:clickable="true"
     android:focusable="true">
 
+    <!-- Иконка PDF -->
     <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:src="@drawable/ic_pdf"/>
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:src="@drawable/ic_pdf" />
 
+    <!-- Информация о файле -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -36,14 +38,27 @@
             android:textColor="#666666"
             android:text="01.01.2024" />
 
+        <!-- Размер файла -->
+        <TextView
+            android:id="@+id/tvSize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:text="0 MB"
+            android:textColor="#666666"
+            android:textSize="12sp" />
+
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvSize"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0 MB"
-        android:textSize="12sp"
-        android:textColor="#666666" />
+
+    <!-- Кнопка облака -->
+    <ImageButton
+        android:id="@+id/btnCloud"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_no_cloud"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:padding="6dp"
+        android:contentDescription="Загрузить в облако" />
 
 </LinearLayout>

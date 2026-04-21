@@ -47,6 +47,8 @@ class CameraFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
+
         previewView = view.findViewById(R.id.previewView)
 
         if (!hasRequiredPermissions()) {
@@ -70,9 +72,9 @@ class CameraFragment : Fragment() {
             // Меняем иконку кнопки
             val flashButton = view?.findViewById<ImageButton>(R.id.btnFlash)
             if (isFlashOn) {
-                flashButton?.setImageResource(R.drawable.ic_flash_on)
-            } else {
                 flashButton?.setImageResource(R.drawable.ic_flash_off)
+            } else {
+                flashButton?.setImageResource(R.drawable.ic_flash_on)
             }
         }
     }
@@ -120,6 +122,8 @@ class CameraFragment : Fragment() {
 
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
+
+        animateFlash()
 
         val photoFile = File(
             requireContext().externalMediaDirs.first(),
@@ -202,6 +206,27 @@ class CameraFragment : Fragment() {
             // Готово: сохраняем временные фото в постоянное хранилище
             sharedGalleryViewModel.commitPhotos()
             findNavController().navigate(R.id.action_camera_to_image_processing)
+        }
+    }
+    private fun animateFlash() {
+        val flashView = view?.findViewById<View>(R.id.viewFlash) ?: return
+
+        flashView.apply {
+            visibility = View.VISIBLE
+            alpha = 0f
+            animate()
+                .alpha(1f)
+                .setDuration(50)
+                .withEndAction {
+                    animate()
+                        .alpha(0f)
+                        .setDuration(150)
+                        .withEndAction {
+                            visibility = View.GONE
+                        }
+                        .start()
+                }
+                .start()
         }
     }
 }
