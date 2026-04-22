@@ -1,12 +1,13 @@
 package com.dima.notesscanner.ui.main
 
-import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.TextView
+import android.widget.LinearLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.dima.notesscanner.R
@@ -19,6 +20,7 @@ class PreviewPhotosAdapter(
 ) : RecyclerView.Adapter<PreviewPhotosAdapter.PreviewViewHolder>() {
 
     class PreviewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val rootLayout: ConstraintLayout = itemView.findViewById(R.id.rootLayout)
         val ivPhoto: ImageView = itemView.findViewById(R.id.ivPhoto)
         val btnMoveUp: ImageButton = itemView.findViewById(R.id.btnMoveUp)
         val btnMoveDown: ImageButton = itemView.findViewById(R.id.btnMoveDown)
@@ -33,6 +35,14 @@ class PreviewPhotosAdapter(
     override fun onBindViewHolder(holder: PreviewViewHolder, position: Int) {
         val photoFile = photos[position]
 
+        // Чередование цветов фона
+        val backgroundColor = if (position % 2 == 0) {
+            Color.parseColor("#2644F7")
+        } else {
+            Color.parseColor("#536BFF")
+        }
+        holder.rootLayout.setBackgroundColor(backgroundColor)
+
         // Загружаем фото
         Glide.with(holder.itemView.context)
             .load(photoFile)
@@ -40,13 +50,11 @@ class PreviewPhotosAdapter(
             .placeholder(R.drawable.ic_broken_image)
             .into(holder.ivPhoto)
 
-
-
-        // ВАЖНО: Убираем старые слушатели перед установкой новых
+        // Убираем старые слушатели
         holder.btnMoveUp.setOnClickListener(null)
         holder.btnMoveDown.setOnClickListener(null)
 
-        // Кнопка вверх - активна только если не первый элемент
+        // Кнопка вверх
         if (position > 0) {
             holder.btnMoveUp.isEnabled = true
             holder.btnMoveUp.alpha = 1.0f
@@ -58,7 +66,7 @@ class PreviewPhotosAdapter(
             holder.btnMoveUp.alpha = 0.3f
         }
 
-        // Кнопка вниз - активна только если не последний элемент
+        // Кнопка вниз
         if (position < photos.size - 1) {
             holder.btnMoveDown.isEnabled = true
             holder.btnMoveDown.alpha = 1.0f
@@ -78,7 +86,6 @@ class PreviewPhotosAdapter(
             val item = photos.removeAt(position)
             photos.add(position - 1, item)
             notifyItemMoved(position, position - 1)
-            // Обновляем соседние элементы, чтобы кнопки перерисовались
             notifyItemChanged(position - 1)
             notifyItemChanged(position)
         }
@@ -89,7 +96,6 @@ class PreviewPhotosAdapter(
             val item = photos.removeAt(position)
             photos.add(position + 1, item)
             notifyItemMoved(position, position + 1)
-            // Обновляем соседние элементы
             notifyItemChanged(position)
             notifyItemChanged(position + 1)
         }

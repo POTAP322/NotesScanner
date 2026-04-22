@@ -1,12 +1,11 @@
 package com.dima.notesscanner.ui.main
 
-import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -20,6 +19,7 @@ class PhotosAdapter(
 ) : RecyclerView.Adapter<PhotosAdapter.PhotoViewHolder>() {
 
     class PhotoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val rootLayout: LinearLayout = itemView.findViewById(R.id.rootLayout)
         val ivPhoto: ImageView = itemView.findViewById(R.id.ivPhoto)
     }
 
@@ -31,6 +31,14 @@ class PhotosAdapter(
 
     override fun onBindViewHolder(holder: PhotoViewHolder, position: Int) {
         val photoFile = photos[position]
+
+        // Чередование цветов фона
+        val backgroundColor = if (position % 2 == 0) {
+            Color.parseColor("#2644F7")
+        } else {
+            Color.parseColor("#536BFF")
+        }
+        holder.rootLayout.setBackgroundColor(backgroundColor)
 
         // Загружаем фото без кэша
         Glide.with(holder.itemView.context)

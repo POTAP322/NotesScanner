@@ -137,7 +137,7 @@ class ImageEditingFragment : Fragment() {
                     fixAspectRatio = false,
                     outputCompressFormat = Bitmap.CompressFormat.JPEG,
                     outputCompressQuality = 90,
-                    toolbarColor = ContextCompat.getColor(requireContext(), R.color.gray),
+                    toolbarColor = ContextCompat.getColor(requireContext(), R.color.item_color_2),
                     toolbarTitleColor = ContextCompat.getColor(requireContext(), R.color.white),
                     toolbarBackButtonColor = ContextCompat.getColor(requireContext(), R.color.white),
                     activityBackgroundColor = ContextCompat.getColor(requireContext(), R.color.white)
@@ -245,7 +245,7 @@ class ImageEditingFragment : Fragment() {
 
     private fun setupButtons(view: View) {
         // Кнопка "Назад" отменяем изменения
-        view.findViewById<Button>(R.id.btnBack).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
             // Восстанавливаем оригинальный файл
             originalPhotoFile?.let { backup ->
                 if (backup.exists()) {
@@ -259,7 +259,7 @@ class ImageEditingFragment : Fragment() {
         }
 
         // Кнопка "Готово" — сохраняем изменения и удаляем бэкап
-        view.findViewById<Button>(R.id.btnDone).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.btnDone).setOnClickListener {
             originalPhotoFile?.delete()
             basePhotoFile?.delete()
             findNavController().navigate(R.id.action_image_editing_to_image_processing)

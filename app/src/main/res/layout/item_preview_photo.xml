@@ -2,14 +2,15 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp"
-    android:background="?android:attr/selectableItemBackground"
+    android:padding="12dp"
+    android:layout_margin="0dp"
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Превью фото: Прикрепляем к центру родителя -->
+    <!-- Превью фото -->
     <ImageView
         android:id="@+id/ivPhoto"
         android:layout_width="180dp"
@@ -22,7 +23,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Контейнер для кнопок: Прикрепляем к правому краю фото -->
+    <!-- Контейнер для кнопок -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -36,7 +37,7 @@
         <ImageButton
             android:id="@+id/btnMoveUp"
             android:layout_width="40dp"
-            android:layout_height="60dp"
+            android:layout_height="40dp"
             android:src="@drawable/ic_arrow_upward"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Переместить вверх"/>
@@ -44,7 +45,7 @@
         <ImageButton
             android:id="@+id/btnMoveDown"
             android:layout_width="40dp"
-            android:layout_height="60dp"
+            android:layout_height="40dp"
             android:layout_marginTop="8dp"
             android:src="@drawable/ic_arrow_downward"
             android:background="?attr/selectableItemBackgroundBorderless"

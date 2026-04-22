@@ -23,22 +23,31 @@ class GridOverlayView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        val width = width.toFloat()
-        val height = height.toFloat()
+        // Защита от нулевых размеров
+        if (width <= 0 || height <= 0) return
 
-        val stepX = width / 3
-        val stepY = height / 3
+        val w = width.toFloat()
+        val h = height.toFloat()
 
-        // Вертикальные линии
-        for (i in 1..2) {
-            val x = stepX * i
-            canvas.drawLine(x, 0f, x, height, paint)
-        }
+        // Используем точное деление на 3
+        val stepX = w / 3f
+        val stepY = h / 3f
 
-        // Горизонтальные линии
-        for (i in 1..2) {
-            val y = stepY * i
-            canvas.drawLine(0f, y, width, y, paint)
+        // Вертикальные линии (от верхнего края до нижнего)
+        canvas.drawLine(stepX, 0f, stepX, h, paint)
+        canvas.drawLine(stepX * 2, 0f, stepX * 2, h, paint)
+
+        // Горизонтальные линии (от левого края до правого)
+        canvas.drawLine(0f, stepY, w, stepY, paint)
+        canvas.drawLine(0f, stepY * 2, w, stepY * 2, paint)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // Запрашиваем перерисовку после того, как View прикрепился к окну
+        post {
+            requestLayout()
+            invalidate()
         }
     }
 }

@@ -47,8 +47,6 @@ class CameraFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
-
         previewView = view.findViewById(R.id.previewView)
 
         if (!hasRequiredPermissions()) {
@@ -58,6 +56,8 @@ class CameraFragment : Fragment() {
         }
 
         setupButtons(view)
+
+
 
     }
 
@@ -139,7 +139,6 @@ class CameraFragment : Fragment() {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     // Добавляем во временное хранилище
                     sharedGalleryViewModel.addTempPhoto(photoFile)
-                    Toast.makeText(requireContext(), "Фото сделано", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onError(exception: ImageCaptureException) {

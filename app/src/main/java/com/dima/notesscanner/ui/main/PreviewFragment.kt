@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -29,9 +30,9 @@ class PreviewFragment : Fragment() {
     private lateinit var recyclerview: RecyclerView
     private lateinit var tabLayout: TabLayout
     private lateinit var pageCount: TextView
-    private lateinit var btnSave: Button
-    private lateinit var btnShare: Button
-    private lateinit var btnFinish: Button
+    private lateinit var btnSave: ImageButton
+    private lateinit var btnShare: ImageButton
+    private lateinit var btnFinish: ImageButton
     private lateinit var photosAdapter: PreviewPhotosAdapter
     private val photosList = mutableListOf<File>()
 
@@ -49,26 +50,18 @@ class PreviewFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         initViews(view)
-        setupToolbar(view)
         setupButtons()
         setupPhotosList()
     }
 
     private fun initViews(view: View) {
         recyclerview = view.findViewById(R.id.recyclerView)
-        tabLayout = view.findViewById(R.id.tabLayout)
         pageCount = view.findViewById(R.id.pageCount)
         btnSave = view.findViewById(R.id.btnSave)
         btnShare = view.findViewById(R.id.btnShare)
         btnFinish = view.findViewById(R.id.btnFinish)
     }
 
-    private fun setupToolbar(view: View) {
-        view.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar)
-            .setNavigationOnClickListener {
-                findNavController().navigateUp()
-            }
-    }
 
     private fun setupButtons() {
         btnSave.setOnClickListener {

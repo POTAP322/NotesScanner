@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dima.notesscanner.R
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.fragment.findNavController
@@ -78,11 +79,11 @@ class ImageProcessingFragment : Fragment() {
     }
 
     private fun setupButtons(view: View) {
-        view.findViewById<Button>(R.id.btnToCamera).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.btnToCamera).setOnClickListener {
             findNavController().navigate(R.id.action_image_processing_to_camera)
         }
 
-        view.findViewById<Button>(R.id.btnToPreview).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.btnToPreview).setOnClickListener {
             if (photosList.isEmpty()) {
                 Toast.makeText(requireContext(), "Сначала добавьте фото", Toast.LENGTH_SHORT).show()
             } else {
