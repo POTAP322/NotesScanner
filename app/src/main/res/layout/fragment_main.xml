@@ -1,17 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#F5F5F5">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- Верхняя белая область с заголовком -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Мои конспекты"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp" />
+        android:orientation="vertical"
+        android:background="#FFFFFF"
+        android:elevation="4dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Мои конспекты"
+            android:textSize="32sp"
+            android:fontFamily="@font/jost"
+            android:textColor="#2644F7"
+            android:gravity="center"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
+
+    </LinearLayout>
 
     <!-- Список конспектов -->
     <androidx.recyclerview.widget.RecyclerView
@@ -19,13 +33,49 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="8dp" />
+        android:padding="8dp"
+        android:clipToPadding="false"
+        android:scrollbarStyle="outsideOverlay" />
 
-    <Button
-        android:id="@+id/btnToProcessing"
+    <!-- Нижняя белая область с кнопками -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Новый конспект"
-        android:layout_marginTop="16dp" />
+        android:padding="10dp"
+        android:background="#FFFFFF"
+        android:elevation="8dp">
+
+        <ImageButton
+            android:id="@+id/btnSort"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="20dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Сортировка"
+            android:padding="10dp"
+            android:src="@drawable/ic_sort"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnToProcessing"
+            android:layout_width="61dp"
+            android:layout_height="61dp"
+            android:background="@drawable/btn_round"
+            android:gravity="center"
+            android:stateListAnimator="@null"
+            android:text="+"
+            android:textColor="#C3CCFF"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:padding="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </LinearLayout>

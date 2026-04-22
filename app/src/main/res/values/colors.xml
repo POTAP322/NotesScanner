@@ -10,4 +10,7 @@
 
     <color name="dark_gray">#1A1A1A</color>
     <color name="gray">#404040</color>
+
+    <color name="item_color_1">#2644F7</color>
+    <color name="item_color_2">#536BFF</color>
 </resources>
