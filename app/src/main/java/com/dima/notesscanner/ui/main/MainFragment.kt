@@ -6,18 +6,18 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.dima.notesscanner.R
-import java.io.File
 
 class MainFragment : Fragment() {
 
@@ -26,12 +26,16 @@ class MainFragment : Fragment() {
     private lateinit var adapter: NoteAdapter
     private val notesList = mutableListOf<NoteItem>()
 
+    private lateinit var normalPanel: ConstraintLayout
+    private lateinit var selectionPanel: ConstraintLayout
+
     // Класс для хранения информации о PDF
     data class NoteItem(
         val name: String,
         val uri: Uri,
         val lastModified: Long,
-        val sizeMB: Double
+        val sizeMB: Double,
+        var isSelected: Boolean = false
     )
 
     override fun onCreateView(
@@ -45,7 +49,7 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerView(view)
-        setupButtons(view)
+        setupItems(view)
         loadNotes()
     }
 
@@ -53,17 +57,23 @@ class MainFragment : Fragment() {
         rvNotes = view.findViewById(R.id.rvNotes)
         rvNotes.layoutManager = LinearLayoutManager(requireContext())
 
-        adapter = NoteAdapter(notesList) { note ->
-            openPdf(note.uri)
-        }
+        adapter = NoteAdapter(notesList,
+            onItemClick = { note -> openPdf(note.uri) },
+            onSelectionChanged = { updateSelectionUI() }
+        )
         rvNotes.adapter = adapter
     }
 
-    private fun setupButtons(view: View) {
+    private fun setupItems(view: View) {
+        normalPanel = view.findViewById(R.id.normalPanel)
+        selectionPanel = view.findViewById(R.id.selectionPanel)
+
         btnToProcessing = view.findViewById(R.id.btnToProcessing)
         btnToProcessing.setOnClickListener {
             findNavController().navigate(R.id.action_main_to_image_processing)
         }
+
+
     }
 
     private fun loadNotes() {
@@ -147,4 +157,15 @@ class MainFragment : Fragment() {
             Toast.makeText(requireContext(), "Не удалось открыть PDF: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
+    private fun updateSelectionUI() {
+        val selectedCount = notesList.count { it.isSelected }
+        if (selectedCount > 0) {
+            normalPanel.visibility = View.GONE
+            selectionPanel.visibility = View.VISIBLE
+        } else {
+            normalPanel.visibility = View.VISIBLE
+            selectionPanel.visibility = View.GONE
+        }
+    }
+
 }

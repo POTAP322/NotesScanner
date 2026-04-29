@@ -135,6 +135,7 @@ class PreviewFragment : Fragment() {
             }
 
         }
+
         btnFinish.setOnClickListener {
             finishAndClean()
         }

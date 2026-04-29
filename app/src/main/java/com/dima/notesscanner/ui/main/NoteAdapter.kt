@@ -5,6 +5,7 @@ import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -16,7 +17,8 @@ import java.util.Locale
 
 class NoteAdapter(
     private val notes: List<MainFragment.NoteItem>,
-    private val onItemClick: (MainFragment.NoteItem) -> Unit
+    private val onItemClick: (MainFragment.NoteItem) -> Unit,
+    private val onSelectionChanged: () -> Unit
 ) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
     class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -24,6 +26,7 @@ class NoteAdapter(
         val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         val tvDate: TextView = itemView.findViewById(R.id.tvDate)
         val tvSize: TextView = itemView.findViewById(R.id.tvSize)
+        val checkbox: CheckBox = itemView.findViewById(R.id.checkbox)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -49,6 +52,12 @@ class NoteAdapter(
 
         holder.itemView.setOnClickListener {
             onItemClick(note)
+        }
+
+        holder.checkbox.isChecked = note.isSelected
+        holder.checkbox.setOnCheckedChangeListener { _, isChecked ->
+            note.isSelected = isChecked
+            onSelectionChanged()  // ← нужно передать колбэк во фрагмент
         }
     }
 
