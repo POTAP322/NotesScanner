@@ -12,12 +12,14 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.dima.notesscanner.R
+import java.io.File
 
 class MainFragment : Fragment() {
 
@@ -28,6 +30,10 @@ class MainFragment : Fragment() {
 
     private lateinit var normalPanel: ConstraintLayout
     private lateinit var selectionPanel: ConstraintLayout
+
+    private lateinit var btnShare: ImageButton
+    private lateinit var btnDelete: ImageButton
+
 
     // Класс для хранения информации о PDF
     data class NoteItem(
@@ -73,7 +79,16 @@ class MainFragment : Fragment() {
             findNavController().navigate(R.id.action_main_to_image_processing)
         }
 
+        btnDelete = view.findViewById(R.id.btnDelete)
+        btnDelete.setOnClickListener {
+            deleteSelected()
 
+        }
+        btnShare = view.findViewById(R.id.btnShare)
+        btnShare.setOnClickListener {
+            shareSelected()
+
+        }
     }
 
     private fun loadNotes() {
@@ -144,6 +159,8 @@ class MainFragment : Fragment() {
         adapter.notifyDataSetChanged()
     }
 
+
+
     private fun openPdf(uri: Uri) {
         try {
             val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -157,6 +174,60 @@ class MainFragment : Fragment() {
             Toast.makeText(requireContext(), "Не удалось открыть PDF: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
+
+    private fun getSelectedNotes(): List<NoteItem> {
+        return notesList.filter { it.isSelected }
+    }
+
+    private fun clearSelection() {
+        notesList.forEach { it.isSelected = false }
+        adapter.notifyDataSetChanged()
+        updateSelectionUI()  // скрываем панель действий
+    }
+
+    private fun shareSelected() {
+        val selected = getSelectedNotes()
+        if (selected.isEmpty()) return
+
+        val uris = ArrayList<Uri>()
+        selected.forEach { note ->
+            uris.add(note.uri)
+        }
+
+        val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+            type = "application/pdf"
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        startActivity(Intent.createChooser(shareIntent, "Поделиться PDF"))
+    }
+
+    private fun deleteSelected() {
+        val selected = getSelectedNotes()
+        if (selected.isEmpty()) return
+
+        // Диалог подтверждения
+        AlertDialog.Builder(requireContext())
+            .setTitle("Удалить конспекты")
+            .setMessage("Вы уверены, что хотите удалить ${selected.size} конспект(ов)?")
+            .setPositiveButton("Удалить") { _, _ ->
+                // 1. Удаляем файлы
+                selected.forEach { note ->
+                    val file = File(note.uri.path ?: return@forEach)
+                    file.delete()
+                }
+                // 2. Удаляем из списка
+                notesList.removeAll(selected)
+                // 3. Обновляем адаптер
+                adapter.notifyDataSetChanged()
+                // 4. Сбрасываем выделение и обновляем UI
+                clearSelection()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
     private fun updateSelectionUI() {
         val selectedCount = notesList.count { it.isSelected }
         if (selectedCount > 0) {
@@ -167,5 +238,6 @@ class MainFragment : Fragment() {
             selectionPanel.visibility = View.GONE
         }
     }
+
 
 }
