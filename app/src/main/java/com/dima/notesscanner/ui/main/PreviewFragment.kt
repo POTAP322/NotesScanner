@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -16,19 +15,16 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
 import com.dima.notesscanner.R
 import com.dima.notesscanner.utils.FileNameDialog
 import com.dima.notesscanner.utils.PdfGenerator
 import com.dima.notesscanner.viewmodel.SharedGalleryViewModel
-import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.launch
 import java.io.File
 
 class PreviewFragment : Fragment() {
 
-    private lateinit var recyclerview: RecyclerView
-    private lateinit var tabLayout: TabLayout
+    private lateinit var previewRecyclerView: RecyclerView
     private lateinit var pageCount: TextView
     private lateinit var btnSave: ImageButton
     private lateinit var btnShare: ImageButton
@@ -55,13 +51,12 @@ class PreviewFragment : Fragment() {
     }
 
     private fun initViews(view: View) {
-        recyclerview = view.findViewById(R.id.recyclerView)
+        previewRecyclerView = view.findViewById(R.id.previewRecyclerView)
         pageCount = view.findViewById(R.id.pageCount)
         btnSave = view.findViewById(R.id.btnSave)
         btnShare = view.findViewById(R.id.btnShare)
         btnFinish = view.findViewById(R.id.btnFinish)
     }
-
 
     private fun setupButtons() {
         btnSave.setOnClickListener {
@@ -117,7 +112,6 @@ class PreviewFragment : Fragment() {
                     progressDialog.dismiss()
 
                     result.onSuccess { uri ->
-                        // Создаем Intent для отправки
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "application/pdf"
                             putExtra(Intent.EXTRA_STREAM, uri)
@@ -133,14 +127,11 @@ class PreviewFragment : Fragment() {
                     }
                 }
             }
-
         }
 
         btnFinish.setOnClickListener {
             finishAndClean()
         }
-
-
     }
 
     private fun setupPhotosList() {
@@ -150,9 +141,7 @@ class PreviewFragment : Fragment() {
 
         pageCount.text = "Страниц: ${photosList.size}"
 
-        // Используем RecyclerView вместо ViewPager для списка с кнопками
-        val recyclerView = view?.findViewById<RecyclerView>(R.id.recyclerView)
-        recyclerView?.layoutManager = LinearLayoutManager(requireContext())
+        previewRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         photosAdapter = PreviewPhotosAdapter(
             photos = photosList,
@@ -163,20 +152,47 @@ class PreviewFragment : Fragment() {
             onMoveDown = { position ->
                 photosAdapter.moveItemDown(position)
                 updatePageNumbers()
+            },
+            onPhotoClick = { photoFile ->
+                val bundle = Bundle().apply {
+                    putString("photoPath", photoFile.absolutePath)
+                }
+                findNavController().navigate(
+                    R.id.action_preview_to_fullscreen_photo,
+                    bundle
+                )
+            },
+            onItemLongClick = { photoFile ->
+                // Показываем диалог удаления
+                showDeleteDialog(photoFile)
             }
+
         )
 
-        recyclerView?.adapter = photosAdapter
+        previewRecyclerView.adapter = photosAdapter
+    }
+
+    private fun showDeleteDialog(photoFile: File) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Удалить фото")
+            .setMessage("Вы уверены, что хотите удалить это фото?")
+            .setPositiveButton("Удалить") { _, _ ->
+                // Удаляем из ViewModel (обновит allPhotos и вызовет observer)
+                sharedGalleryViewModel.removePhoto(photoFile)
+                // Удаляем файл
+                photoFile.delete()
+                Toast.makeText(requireContext(), "Фото удалено", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 
     private fun updatePageNumbers() {
         pageCount.text = "Страниц: ${photosList.size}"
-        // Сохраняем новый порядок в ViewModel
         sharedGalleryViewModel.updatePhotosOrder(photosList)
     }
 
     private fun finishAndClean() {
-        // Диалог подтверждения
         AlertDialog.Builder(requireContext())
             .setTitle("Завершить сессию")
             .setMessage("Все несохранённые фото будут удалены.")
@@ -188,10 +204,8 @@ class PreviewFragment : Fragment() {
     }
 
     private fun performCleanup() {
-        // Получаем все фото
         val photos = sharedGalleryViewModel.allPhotos.value ?: emptyList()
 
-        // Удаляем файлы с диска
         var deletedCount = 0
         photos.forEach { photoFile ->
             try {
@@ -204,13 +218,8 @@ class PreviewFragment : Fragment() {
             }
         }
 
-        // Очищаем ViewModel
         sharedGalleryViewModel.clearAllPhotos()
-
-        // Показываем сообщение
         Toast.makeText(requireContext(), "Удалено $deletedCount фото", Toast.LENGTH_SHORT).show()
-
-        // Переходим на главный экран
         findNavController().navigate(R.id.action_preview_to_main)
     }
 }

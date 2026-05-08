@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -16,7 +15,9 @@ import java.io.File
 class PreviewPhotosAdapter(
     private var photos: MutableList<File>,
     private val onMoveUp: (Int) -> Unit,
-    private val onMoveDown: (Int) -> Unit
+    private val onMoveDown: (Int) -> Unit,
+    private val onPhotoClick: (File) -> Unit,
+    private val onItemLongClick: (File) -> Unit
 ) : RecyclerView.Adapter<PreviewPhotosAdapter.PreviewViewHolder>() {
 
     class PreviewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -50,6 +51,11 @@ class PreviewPhotosAdapter(
             .placeholder(R.drawable.ic_broken_image)
             .into(holder.ivPhoto)
 
+        // Клик по фото для открытия в полноэкранном режиме
+        holder.ivPhoto.setOnClickListener {
+            onPhotoClick(photoFile)
+        }
+
         // Убираем старые слушатели
         holder.btnMoveUp.setOnClickListener(null)
         holder.btnMoveDown.setOnClickListener(null)
@@ -76,6 +82,11 @@ class PreviewPhotosAdapter(
         } else {
             holder.btnMoveDown.isEnabled = false
             holder.btnMoveDown.alpha = 0.3f
+        }
+
+        holder.itemView.setOnLongClickListener {
+            onItemLongClick(photoFile)
+            true
         }
     }
 

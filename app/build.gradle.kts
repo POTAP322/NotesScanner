@@ -86,7 +86,5 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.vanniktech:android-image-cropper:4.7.0")
     implementation("org.opencv:opencv:4.13.0")
-
-
-
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
 }

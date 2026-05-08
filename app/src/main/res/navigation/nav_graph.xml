@@ -54,6 +54,12 @@
             app:popUpTo="@id/mainFragment"
             app:popUpToInclusive="true" />
 
+        <action
+            android:id="@+id/action_preview_to_fullscreen_photo"
+            app:destination="@id/fullscreenPhotoFragment"
+            app:popUpTo="@id/previewFragment"
+            app:popUpToInclusive="false" />
+
     </fragment>
 
     <fragment
@@ -63,7 +69,12 @@
             android:id="@+id/action_camera_to_image_processing"
             app:destination="@+id/imageProcessingFragment"
             />
-
     </fragment>
+
+    <fragment
+        android:id="@+id/fullscreenPhotoFragment"
+        android:name="com.dima.notesscanner.ui.main.FullscreenPhotoFragment">
+    </fragment>
+
 
 </navigation>
