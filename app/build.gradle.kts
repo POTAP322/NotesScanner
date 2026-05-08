@@ -21,6 +21,17 @@ android {
         }
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
+    }
+
+
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -75,6 +86,7 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.vanniktech:android-image-cropper:4.7.0")
     implementation("org.opencv:opencv:4.13.0")
+
 
 
 }
