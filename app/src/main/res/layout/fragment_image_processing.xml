@@ -28,7 +28,7 @@
         android:padding="0dp"
         android:clipToPadding="false"/>
 
-    <!-- Нижняя панель с иконками -->
+    <!-- Нижняя панель -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -36,7 +36,7 @@
         android:elevation="8dp"
         android:padding="16dp">
 
-        <!-- Иконка камеры-->
+        <!-- Иконка камеры -->
         <ImageButton
             android:id="@+id/btnToCamera"
             android:layout_width="58dp"
@@ -49,19 +49,18 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Иконка готово -->
+        <!-- Кнопка меню (три точки) вместо галочки -->
         <ImageButton
-            android:id="@+id/btnToPreview"
+            android:id="@+id/btnMenu"
             android:layout_width="58dp"
             android:layout_height="58dp"
             android:layout_marginEnd="20dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Готово"
+            android:contentDescription="Меню"
             android:src="@drawable/ic_done"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
