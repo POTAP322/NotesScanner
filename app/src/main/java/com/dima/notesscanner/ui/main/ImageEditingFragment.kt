@@ -5,9 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
@@ -33,6 +31,7 @@ import kotlinx.coroutines.withContext
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 import androidx.core.graphics.createBitmap
+import com.github.chrisbanes.photoview.PhotoView
 
 class ImageEditingFragment : Fragment() {
 
@@ -64,17 +63,13 @@ class ImageEditingFragment : Fragment() {
             photoFile.copyTo(basePhotoFile!!, overwrite = true)
         }
 
-        val ivPhoto: ImageView = view.findViewById(R.id.mainImage)
-
-        Glide.with(ivPhoto.context)
+        val photoView = view.findViewById<PhotoView>(R.id.mainImage)
+        Glide.with(photoView.context)
             .load(photoPath)
             .diskCacheStrategy(DiskCacheStrategy.NONE)
             .skipMemoryCache(true)
             .placeholder(R.drawable.ic_broken_image)
-            .into(ivPhoto)
-
-
-
+            .into(photoView)
 
         setupButtons(view)
         setupSeekBars(view)
@@ -99,12 +94,12 @@ class ImageEditingFragment : Fragment() {
 
                     sharedGalleryViewModel.notifyPhotoChanged(photoFile)
 
-                    val ivPhoto: ImageView = requireView().findViewById(R.id.mainImage)
+                    val photoView = requireView().findViewById<PhotoView>(R.id.mainImage)
                     Glide.with(this)
                         .load(photoFile)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .skipMemoryCache(true)
-                        .into(ivPhoto)
+                        .into(photoView)
 
                 } catch (e: Exception) {
                     Toast.makeText(requireContext(), "Ошибка при сохранении: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -115,7 +110,6 @@ class ImageEditingFragment : Fragment() {
             Toast.makeText(requireContext(), "Ошибка при обрезке: ${exception?.message}", Toast.LENGTH_SHORT).show()
         }
     }
-
 
     private fun startCrop() {
         if (!::photoFile.isInitialized) {
@@ -141,14 +135,12 @@ class ImageEditingFragment : Fragment() {
                     toolbarTitleColor = ContextCompat.getColor(requireContext(), R.color.white),
                     toolbarBackButtonColor = ContextCompat.getColor(requireContext(), R.color.white),
                     activityBackgroundColor = ContextCompat.getColor(requireContext(), R.color.white)
-
                 )
             )
         )
     }
 
     private fun applyBrightnessAndContrast(brightnessValue: Int, contrastValue: Int) {
-        // Защита от повторного вызова
         if (isApplying) {
             Toast.makeText(requireContext(), "Подождите, предыдущая операция ещё не завершена", Toast.LENGTH_SHORT).show()
             return
@@ -156,7 +148,6 @@ class ImageEditingFragment : Fragment() {
 
         isApplying = true
 
-        // Показываем прогресс
         val progressDialog = android.app.ProgressDialog(requireContext()).apply {
             setMessage("Применение эффектов...")
             setCancelable(false)
@@ -165,25 +156,22 @@ class ImageEditingFragment : Fragment() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Загружаем Bitmap с уменьшенным разрешением для обработки
                 val originalBitmap = Glide.with(this@ImageEditingFragment)
                     .asBitmap()
-                    .load(basePhotoFile ?: photoFile)  // ← загружаем basePhotoFile
-                    .override(1024, 1024)  // Уменьшаем размер для обработки (быстрее)
+                    .load(basePhotoFile ?: photoFile)
+                    .override(1024, 1024)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .skipMemoryCache(true)
                     .submit()
                     .get()
 
                 if (originalBitmap != null) {
-                    val resultBitmap = applyBrightnessAndContrast(originalBitmap, brightnessValue, contrastValue)
+                    val resultBitmap = applyBrightnessAndContrastOpenCV(originalBitmap, brightnessValue, contrastValue)
 
-                    // Сохраняем в файл
                     val outputStream = FileOutputStream(photoFile)
                     resultBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
                     outputStream.close()
 
-                    // Очищаем память
                     originalBitmap.recycle()
                     resultBitmap.recycle()
 
@@ -191,13 +179,12 @@ class ImageEditingFragment : Fragment() {
                         progressDialog.dismiss()
                         isApplying = false
 
-                        // Обновляем ImageView
-                        val ivPhoto: ImageView = requireView().findViewById(R.id.mainImage)
+                        val photoView = requireView().findViewById<PhotoView>(R.id.mainImage)
                         Glide.with(this@ImageEditingFragment)
                             .load(photoFile)
                             .diskCacheStrategy(DiskCacheStrategy.NONE)
                             .skipMemoryCache(true)
-                            .into(ivPhoto)
+                            .into(photoView)
 
                         sharedGalleryViewModel.notifyPhotoChanged(photoFile)
                     }
@@ -218,39 +205,30 @@ class ImageEditingFragment : Fragment() {
         }
     }
 
-    private fun applyBrightnessAndContrast(originalBitmap: Bitmap, brightnessValue: Int, contrastValue: Int): Bitmap {
-
+    private fun applyBrightnessAndContrastOpenCV(originalBitmap: Bitmap, brightnessValue: Int, contrastValue: Int): Bitmap {
         val contrast = 1.0 + (contrastValue / 100.0)
         val brightness = brightnessValue.toDouble()
 
         val sourceMat = Mat()
-        Utils.bitmapToMat(originalBitmap,sourceMat)
+        Utils.bitmapToMat(originalBitmap, sourceMat)
 
         val destinationMat = Mat()
-
-        //формула g(x) = alpha * f(x) + beta
-        sourceMat.convertTo(destinationMat,-1,contrast,brightness)
+        sourceMat.convertTo(destinationMat, -1, contrast, brightness)
 
         val resultBitmap = createBitmap(destinationMat.cols(), destinationMat.rows(), Bitmap.Config.ARGB_8888)
-
-        Utils.matToBitmap(destinationMat,resultBitmap)
+        Utils.matToBitmap(destinationMat, resultBitmap)
 
         sourceMat.release()
         destinationMat.release()
 
-
         return resultBitmap
-
     }
 
     private fun setupButtons(view: View) {
-        // Кнопка "Назад" отменяем изменения
         view.findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
-            // Восстанавливаем оригинальный файл
             originalPhotoFile?.let { backup ->
                 if (backup.exists()) {
                     backup.copyTo(photoFile, overwrite = true)
-                    // Также обновляем basePhotoFile
                     backup.copyTo(basePhotoFile!!, overwrite = true)
                     sharedGalleryViewModel.notifyPhotoChanged(photoFile)
                 }
@@ -258,7 +236,6 @@ class ImageEditingFragment : Fragment() {
             findNavController().navigate(R.id.action_image_editing_to_image_processing)
         }
 
-        // Кнопка "Готово" — сохраняем изменения и удаляем бэкап
         view.findViewById<ImageButton>(R.id.btnDone).setOnClickListener {
             originalPhotoFile?.delete()
             basePhotoFile?.delete()
@@ -270,21 +247,20 @@ class ImageEditingFragment : Fragment() {
             startCrop()
         }
     }
+
     private fun setupSeekBars(view: View) {
-        // Ползунок яркости
         val sbBrightness = view.findViewById<SeekBar>(R.id.sbBrightness)
         val tvBrightnessValue = view.findViewById<TextView>(R.id.tvBrightnessValue)
 
         sbBrightness.max = 200
-        sbBrightness.progress = 100  // 100 = 0 = норма
+        sbBrightness.progress = 100
         tvBrightnessValue.text = "0"
 
-        // Ползунок контраста
         val sbContrast = view.findViewById<SeekBar>(R.id.sbContrast)
         val tvContrastValue = view.findViewById<TextView>(R.id.tvContrastValue)
 
         sbContrast.max = 200
-        sbContrast.progress = 100  // 0 = норма
+        sbContrast.progress = 100
         tvContrastValue.text = "0"
 
         sbBrightness.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -292,9 +268,7 @@ class ImageEditingFragment : Fragment() {
                 val value = progress - 100
                 tvBrightnessValue.text = value.toString()
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 val brightnessValue = sbBrightness.progress - 100
                 val contrastValue = sbContrast.progress - 100
@@ -307,9 +281,7 @@ class ImageEditingFragment : Fragment() {
                 val value = progress - 100
                 tvContrastValue.text = value.toString()
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 val brightnessValue = sbBrightness.progress - 100
                 val contrastValue = sbContrast.progress - 100
@@ -317,5 +289,4 @@ class ImageEditingFragment : Fragment() {
             }
         })
     }
-
 }

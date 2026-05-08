@@ -28,12 +28,12 @@
         android:gravity="center"
         android:background="#FFFFFF">
 
-        <ImageView
+        <com.github.chrisbanes.photoview.PhotoView
             android:id="@+id/mainImage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:scaleType="fitCenter"
-            android:adjustViewBounds="true" />
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter" />
 
     </FrameLayout>
 
