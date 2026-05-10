@@ -7,6 +7,5 @@
         <item name="android:backgroundTint">#6200EE</item>
         <item name="android:textSize">16sp</item>
     </style>
-
 </resources>
 

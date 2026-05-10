@@ -1,12 +1,15 @@
 package com.dima.notesscanner.ui.main
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import android.widget.PopupMenu
+import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
@@ -80,17 +83,74 @@ class ImageProcessingFragment : Fragment() {
     }
 
     private fun showPopupMenu(anchor: View) {
-        val popup = PopupMenu(requireContext(), anchor)
-        popup.inflate(R.menu.processing_menu) // создадим menu файл
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.action_save -> { savePdf(); true }
-                R.id.action_share -> { sharePdf(); true }
-                R.id.action_finish -> { finishAndClean(); true }
-                else -> false
-            }
+        val popupView = LayoutInflater.from(requireContext()).inflate(R.layout.menu_popup, null)
+
+        val popupWindow = PopupWindow(
+            popupView,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
+        popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popupWindow.elevation = 10f
+
+        // Измеряем размеры окна
+        popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+        val popupWidth = popupView.measuredWidth
+        val popupHeight = popupView.measuredHeight
+
+        val location = IntArray(2)
+        anchor.getLocationOnScreen(location)
+        val x = location[0] + anchor.width / 2 - popupWidth / 2
+        val y = location[1] - popupHeight - 40
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, x, y)
+
+        // Получаем кнопки внутри меню
+        val btnSave = popupView.findViewById<ImageButton>(R.id.btnSave)
+        val btnShare = popupView.findViewById<ImageButton>(R.id.btnShare)
+        val btnFinish = popupView.findViewById<ImageButton>(R.id.btnFinish)
+
+        // Скрываем их изначально
+        btnSave.visibility = View.INVISIBLE
+        btnShare.visibility = View.INVISIBLE
+        btnFinish.visibility = View.INVISIBLE
+
+        // Анимируем появление с задержкой
+        val startDelay = 50L
+        val delayBetween = 80L
+
+        animateButton(btnFinish, startDelay)
+        animateButton(btnShare, startDelay + delayBetween)
+        animateButton(btnSave, startDelay + delayBetween * 2)
+
+        btnSave.setOnClickListener {
+            savePdf()
+            popupWindow.dismiss()
         }
-        popup.show()
+        btnShare.setOnClickListener {
+            sharePdf()
+            popupWindow.dismiss()
+        }
+        btnFinish.setOnClickListener {
+            finishAndClean()
+            popupWindow.dismiss()
+        }
+    }
+
+    private fun animateButton(button: View, delay: Long) {
+        button.visibility = View.VISIBLE
+        button.alpha = 0f
+        button.scaleX = 0.5f
+        button.scaleY = 0.5f
+
+        button.animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(200)
+            .setStartDelay(delay)
+            .start()
     }
 
     // --- функции из PreviewFragment ---

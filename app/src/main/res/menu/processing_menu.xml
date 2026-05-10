@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/action_save" android:title="Сохранить" android:icon="@drawable/ic_save" />
-    <item android:id="@+id/action_share" android:title="Отправить" android:icon="@drawable/ic_share" />
-    <item android:id="@+id/action_finish" android:title="Завершить" android:icon="@drawable/ic_done" />
-</menu>

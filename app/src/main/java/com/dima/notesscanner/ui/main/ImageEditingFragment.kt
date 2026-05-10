@@ -23,6 +23,7 @@ import java.io.FileOutputStream
 import com.dima.notesscanner.viewmodel.SharedGalleryViewModel
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -245,6 +246,20 @@ class ImageEditingFragment : Fragment() {
         val btnCrop = view.findViewById<ImageButton>(R.id.btnCrop)
         btnCrop.setOnClickListener {
             startCrop()
+        }
+
+        //кнопка удаления
+        view.findViewById<ImageButton>(R.id.btnDelete).setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Удалить фото")
+                .setMessage("Вы уверены, что хотите удалить это фото?")
+                .setPositiveButton("Удалить") { _, _ ->
+                    photoFile.delete()
+                    sharedGalleryViewModel.removePhoto(photoFile)
+                    findNavController().navigate(R.id.action_image_editing_to_image_processing)
+                }
+                .setNegativeButton("Отмена", null)
+                .show()
         }
     }
 
