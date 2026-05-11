@@ -3,6 +3,7 @@ package com.dima.notesscanner.ui.main
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -11,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -22,8 +24,11 @@ import com.dima.notesscanner.R
 import com.dima.notesscanner.utils.FileNameDialog
 import com.dima.notesscanner.utils.PdfGenerator
 import com.dima.notesscanner.viewmodel.SharedGalleryViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 
 class ImageProcessingFragment : Fragment() {
 
@@ -79,6 +84,46 @@ class ImageProcessingFragment : Fragment() {
         val btnMenu = view.findViewById<ImageButton>(R.id.btnMenu)
         btnMenu.setOnClickListener { v ->
             showPopupMenu(v)
+        }
+        val btnAddPhoto = view.findViewById<ImageButton>(R.id.btnAddPhoto).setOnClickListener {
+            pickImagesLauncher.launch("image/*")
+        }
+    }
+
+    private val pickImagesLauncher = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+        if (uris.isNotEmpty()) {
+            copyImagesToAppStorage(uris)
+        } else {
+            Toast.makeText(requireContext(), "Файлы не выбраны", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun copyImagesToAppStorage(uris: List<Uri>) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val newPhotos = mutableListOf<File>()
+            uris.forEach { uri ->
+                try {
+                    val inputStream = requireContext().contentResolver.openInputStream(uri)
+                    val fileName = "gallery_${System.currentTimeMillis()}.jpg"
+                    val photoFile = File(requireContext().externalMediaDirs.first(), fileName)
+                    val outputStream = FileOutputStream(photoFile)
+                    inputStream?.copyTo(outputStream)
+                    inputStream?.close()
+                    outputStream.close()
+                    newPhotos.add(photoFile)
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "Ошибка копирования: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            // Переключаемся на главный поток
+            withContext(Dispatchers.Main) {
+                newPhotos.forEach { photoFile ->
+                    sharedGalleryViewModel.addPhoto(photoFile)
+                }
+                Toast.makeText(requireContext(), "Добавлено ${newPhotos.size} фото", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

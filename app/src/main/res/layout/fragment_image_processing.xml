@@ -68,7 +68,6 @@
             android:layout_height="58dp"
             android:layout_marginStart="20dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Меню"
             android:src="@drawable/ic_add_photo"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

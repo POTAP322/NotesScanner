@@ -18,6 +18,13 @@ class SharedGalleryViewModel : ViewModel() {
     // Временное хранилище для фото во время съёмки
     private val tempPhotos = mutableListOf<File>()
 
+    fun addPhoto(photoFile: File) {
+        val currentAll = _allPhotos.value?.toMutableList() ?: mutableListOf()
+        currentAll.add(photoFile)
+        _allPhotos.value = currentAll
+    }
+
+    // Добавление фото напрямую в постоянный список (для галереи)
     fun addTempPhoto(photoFile: File) {
         tempPhotos.add(photoFile)
         // Обновляем capturedPhotos для отображения в камере (если нужно)
