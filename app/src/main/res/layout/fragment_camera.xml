@@ -42,6 +42,7 @@
             android:layout_gravity="top|end"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_flash_on"
+            app:tint="@android:color/white"
             android:padding="12dp"
             android:contentDescription="Flash" />
 
