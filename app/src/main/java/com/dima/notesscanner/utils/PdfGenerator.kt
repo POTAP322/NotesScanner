@@ -20,7 +20,7 @@ class PdfGenerator(private val context: Context) {
         private const val PAGE_WIDTH = 1240
         private const val PAGE_HEIGHT = 1754
         private const val MARGIN_PERCENT = 0.05f
-        private const val JPEG_QUALITY = 70
+        private const val JPEG_QUALITY = 50
     }
 
     /**

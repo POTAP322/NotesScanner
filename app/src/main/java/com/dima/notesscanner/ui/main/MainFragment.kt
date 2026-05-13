@@ -34,6 +34,8 @@ class MainFragment : Fragment() {
     private lateinit var btnShare: ImageButton
     private lateinit var btnDelete: ImageButton
 
+    private var currentSortOrder = "date" // "date" или "name"
+
 
     // Класс для хранения информации о PDF
     data class NoteItem(
@@ -89,16 +91,20 @@ class MainFragment : Fragment() {
             shareSelected()
 
         }
+        view.findViewById<ImageButton>(R.id.btnSort).setOnClickListener {
+            showSortDialog()
+        }
     }
 
     private fun loadNotes() {
         notesList.clear()
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             loadNotesWithMediaStore()
         } else {
             loadNotesWithFileSystem()
         }
+        currentSortOrder = "date"
+        adapter.notifyDataSetChanged()
     }
 
     private fun loadNotesWithMediaStore() {
@@ -159,7 +165,36 @@ class MainFragment : Fragment() {
         adapter.notifyDataSetChanged()
     }
 
+    private fun showSortDialog() {
+        val options = arrayOf("По дате (новые сверху)", "По алфавиту (А-Я)")
+        val checkedItem = if (currentSortOrder == "date") 0 else 1
+        AlertDialog.Builder(requireContext())
+            .setTitle("Сортировка")
+            .setSingleChoiceItems(options, checkedItem) { _, which ->
+                when (which) {
+                    0 -> sortNotesByDate()
+                    1 -> sortNotesByName()
+                }
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
 
+    private fun sortNotesByDate() {
+        if (currentSortOrder == "date") return
+        currentSortOrder = "date"
+        notesList.sortByDescending { it.lastModified }
+        adapter.notifyDataSetChanged()
+        clearSelection() // сброс выделения после сортировки
+    }
+
+    private fun sortNotesByName() {
+        if (currentSortOrder == "name") return
+        currentSortOrder = "name"
+        notesList.sortBy { it.name.lowercase() }
+        adapter.notifyDataSetChanged()
+        clearSelection()
+    }
 
     private fun openPdf(uri: Uri) {
         try {

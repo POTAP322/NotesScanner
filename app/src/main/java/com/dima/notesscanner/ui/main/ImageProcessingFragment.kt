@@ -198,7 +198,6 @@ class ImageProcessingFragment : Fragment() {
             .start()
     }
 
-    // --- функции из PreviewFragment ---
     private fun savePdf() {
         val photos = sharedGalleryViewModel.allPhotos.value
         if (photos.isNullOrEmpty()) {
