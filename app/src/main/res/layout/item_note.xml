@@ -49,7 +49,7 @@
                 android:textColor="#C3CCFF"
                 android:text="Название конспекта" />
 
-            <!-- Облачко (маленькое, справа от названия) -->
+            <!-- Облачко  -->
             <ImageButton
                 android:id="@+id/btnCloud"
                 android:layout_width="wrap_content"

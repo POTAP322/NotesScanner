@@ -6,13 +6,13 @@
     android:orientation="vertical"
     android:background="#F5F5F5">
 
-    <!-- Верхняя белая область с заголовком -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="#FFFFFF"
-        android:elevation="4dp">
+        android:elevation="4dp"
+        android:padding="12dp">
 
         <TextView
             android:layout_width="match_parent"
@@ -21,9 +21,8 @@
             android:textSize="32sp"
             android:fontFamily="@font/jost"
             android:textColor="#2644F7"
-            android:gravity="center"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp" />
+            android:gravity="center" />
+
 
     </LinearLayout>
 
@@ -67,8 +66,8 @@
 
         <ImageButton
             android:id="@+id/btnSort"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="58dp"
+            android:layout_height="58dp"
             android:layout_marginEnd="20dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="Сортировка"
@@ -94,8 +93,8 @@
         <!-- Кнопка Поделиться (Слева) -->
         <ImageButton
             android:id="@+id/btnShare"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="58dp"
+            android:layout_height="58dp"
             android:src="@drawable/ic_share"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="Поделиться"
@@ -107,9 +106,9 @@
         <!-- Кнопка Удалить (Справа) -->
         <ImageButton
             android:id="@+id/btnDelete"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_delete"
+            android:layout_width="58dp"
+            android:layout_height="58dp"
+            android:src="@drawable/ic_delete_58dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="Удалить"
             android:layout_marginEnd="20dp"
