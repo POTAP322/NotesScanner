@@ -1,6 +1,7 @@
 package com.dima.notesscanner.ui.main
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -22,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dima.notesscanner.R
 import com.dima.notesscanner.utils.FileNameDialog
+import com.dima.notesscanner.utils.ImageProcessor
 import com.dima.notesscanner.utils.PdfGenerator
 import com.dima.notesscanner.viewmodel.SharedGalleryViewModel
 import kotlinx.coroutines.Dispatchers
@@ -88,6 +90,10 @@ class ImageProcessingFragment : Fragment() {
         val btnAddPhoto = view.findViewById<ImageButton>(R.id.btnAddPhoto).setOnClickListener {
             pickImagesLauncher.launch("image/*")
         }
+
+        view.findViewById<ImageButton>(R.id.btnAutoEnhance).setOnClickListener {
+            autoEnhanceWithMode()
+        }
     }
 
     private val pickImagesLauncher = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
@@ -124,6 +130,82 @@ class ImageProcessingFragment : Fragment() {
                 }
                 Toast.makeText(requireContext(), "Добавлено ${newPhotos.size} фото", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun autoEnhanceWithMode() {
+        val photos = sharedGalleryViewModel.allPhotos.value
+        if (photos.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Нет фото для улучшения", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val modes = arrayOf("Улучшение читаемости конспекта", "Режим сканера документа (А4 лист)")
+        AlertDialog.Builder(requireContext())
+            .setTitle("Выберите режим улучшения")
+            .setItems(modes) { _, which ->
+                when (which) {
+                    0 -> enhanceBrightnessContrast(photos)
+                    1 -> enhancePerspective(photos)
+                }
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun enhanceBrightnessContrast(photos: List<File>) {
+        lifecycleScope.launch {
+            val progressDialog = android.app.ProgressDialog(requireContext()).apply {
+                setMessage("Применение яркости/контраста...")
+                setCancelable(false)
+                show()
+            }
+
+            var count = 0
+            withContext(Dispatchers.IO) {
+                photos.forEach { photoFile ->
+                    val enhanced = ImageProcessor.autoEnhanceBrightnessContrast(requireContext(), photoFile)
+                    if (enhanced != null) {
+                        photoFile.outputStream().use { out ->
+                            enhanced.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                        }
+                        enhanced.recycle()
+                        count++
+                    }
+                }
+            }
+
+            progressDialog.dismiss()
+            Toast.makeText(requireContext(), "Улучшено $count фото", Toast.LENGTH_SHORT).show()
+            photos.firstOrNull()?.let { sharedGalleryViewModel.notifyPhotoChanged(it) }
+        }
+    }
+
+    private fun enhancePerspective(photos: List<File>) {
+        lifecycleScope.launch {
+            val progressDialog = android.app.ProgressDialog(requireContext()).apply {
+                setMessage("Обработка A4 листов...")
+                setCancelable(false)
+                show()
+            }
+
+            var count = 0
+            withContext(Dispatchers.IO) {
+                photos.forEach { photoFile ->
+                    val enhanced = ImageProcessor.autoEnhancePerspective(requireContext(), photoFile)
+                    if (enhanced != null) {
+                        photoFile.outputStream().use { out ->
+                            enhanced.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                        }
+                        enhanced.recycle()
+                        count++
+                    }
+                }
+            }
+
+            progressDialog.dismiss()
+            Toast.makeText(requireContext(), "Обработано $count фото", Toast.LENGTH_SHORT).show()
+            photos.firstOrNull()?.let { sharedGalleryViewModel.notifyPhotoChanged(it) }
         }
     }
 
