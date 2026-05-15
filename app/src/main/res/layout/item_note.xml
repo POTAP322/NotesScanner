@@ -34,7 +34,7 @@
         android:layout_weight="1"
         android:layout_marginStart="12dp">
 
-        <!-- 1. Название (Занимает ВЕСЬ верхний блок по ширине) -->
+        <!-- 1. Название  -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
@@ -48,7 +48,7 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <!-- 2. Дата (Под названием) -->
+        <!-- 2. Дата -->
         <TextView
             android:id="@+id/tvDate"
             android:layout_width="wrap_content"
@@ -61,7 +61,7 @@
             android:textColor="#80C3CCFF"
             android:textSize="12sp" />
 
-        <!-- 3. Размер (Рядом с датой или под ней) -->
+        <!-- 3. Размер  -->
         <TextView
             android:id="@+id/tvSize"
             android:layout_width="wrap_content"
@@ -75,7 +75,7 @@
             android:textColor="#80C3CCFF"
             android:textSize="12sp" />
 
-        <!-- 4. Облачко (Абсолютно позиционировано в правом НИЖНЕМ углу) -->
+        <!-- 4. Облачко  -->
         <ImageButton
             android:id="@+id/btnCloud"
             android:layout_width="40dp"

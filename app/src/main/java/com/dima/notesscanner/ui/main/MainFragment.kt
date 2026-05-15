@@ -173,15 +173,15 @@ class MainFragment : Fragment() {
     private fun loadPreviewsAsync() {
         lifecycleScope.launch {
             for (note in notesList) {
-                val pdfFile = getFileFromUri(note.uri) ?: continue
-                // Передаём размеры 124x175 dp (соответствует 126x168 в XML с учётом пропорций)
-                val previewPath = PreviewCacheManager.getPreview(requireContext(), pdfFile, 124, 175)
+                val previewPath = PreviewCacheManager.getPreview(requireContext(), note.uri, 124, 175)
                 if (previewPath != null) {
                     note.previewPath = previewPath
                     val index = notesList.indexOf(note)
                     if (index != -1) {
                         adapter.notifyItemChanged(index)
                     }
+                } else {
+                    android.util.Log.e("MainFragment", "Failed to generate preview for: ${note.name}")
                 }
             }
         }
@@ -192,7 +192,7 @@ class MainFragment : Fragment() {
             when (uri.scheme) {
                 "file" -> File(uri.path)
                 "content" -> {
-                    // Сначала пробуем получить DATA
+                    // Пробуем получить DATA
                     var path: String? = null
                     val cursor = requireContext().contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)
                     cursor?.use {
@@ -204,24 +204,30 @@ class MainFragment : Fragment() {
                         }
                     }
                     if (path != null && File(path).exists()) {
+                        android.util.Log.d("MainFragment", "Found file via DATA: $path")
                         return File(path)
                     }
-                    // Если не получилось, пробуем получить через DISPLAY_NAME и путь к Downloads
+
+                    // Пробуем через DISPLAY_NAME
                     val nameCursor = requireContext().contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)
                     nameCursor?.use {
                         if (it.moveToFirst()) {
                             val name = it.getString(0)
                             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                             val file = File(downloadsDir, name)
-                            if (file.exists()) return file
+                            if (file.exists()) {
+                                android.util.Log.d("MainFragment", "Found file via DISPLAY_NAME: ${file.absolutePath}")
+                                return file
+                            }
                         }
                     }
+                    android.util.Log.e("MainFragment", "Could not resolve URI: $uri")
                     null
                 }
                 else -> null
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("MainFragment", "getFileFromUri error", e)
             null
         }
     }
@@ -308,12 +314,14 @@ class MainFragment : Fragment() {
             .setMessage("Вы уверены, что хотите удалить ${selected.size} конспект(ов)?")
             .setPositiveButton("Удалить") { _, _ ->
                 selected.forEach { note ->
-                    val file = getFileFromUri(note.uri)
-                    if (file != null && file.exists()) {
-                        file.delete()
-                        lifecycleScope.launch {
-                            PreviewCacheManager.deletePreview(requireContext(), file)
-                        }
+                    // Удаляем файл через ContentResolver
+                    try {
+                        requireContext().contentResolver.delete(note.uri, null, null)
+                    } catch (e: Exception) {
+                        android.util.Log.e("MainFragment", "Delete failed", e)
+                    }
+                    lifecycleScope.launch {
+                        PreviewCacheManager.deletePreview(requireContext(), note.uri)
                     }
                 }
                 notesList.removeAll(selected)
