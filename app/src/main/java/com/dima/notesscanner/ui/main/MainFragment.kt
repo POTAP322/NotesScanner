@@ -17,8 +17,11 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.dima.notesscanner.R
+import com.dima.notesscanner.utils.PreviewCacheManager
+import kotlinx.coroutines.launch
 import java.io.File
 
 class MainFragment : Fragment() {
@@ -43,6 +46,7 @@ class MainFragment : Fragment() {
         val uri: Uri,
         val lastModified: Long,
         val sizeMB: Double,
+        var previewPath: String? = null,
         var isSelected: Boolean = false
     )
 
@@ -105,6 +109,7 @@ class MainFragment : Fragment() {
         }
         currentSortOrder = "date"
         adapter.notifyDataSetChanged()
+        loadPreviewsAsync()
     }
 
     private fun loadNotesWithMediaStore() {
@@ -163,6 +168,50 @@ class MainFragment : Fragment() {
         }
 
         adapter.notifyDataSetChanged()
+    }
+
+    private fun loadPreviewsAsync() {
+        lifecycleScope.launch {
+            for (note in notesList) {
+                val pdfFile = getFileFromUri(note.uri) ?: continue
+                // Передаём размеры 124x175 dp (соответствует 126x168 в XML с учётом пропорций)
+                val previewPath = PreviewCacheManager.getPreview(requireContext(), pdfFile, 124, 175)
+                if (previewPath != null) {
+                    note.previewPath = previewPath
+                    val index = notesList.indexOf(note)
+                    if (index != -1) {
+                        adapter.notifyItemChanged(index)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getFileFromUri(uri: Uri): File? {
+        return try {
+            when (uri.scheme) {
+                "file" -> File(uri.path)
+                "content" -> {
+                    val cursor = requireContext().contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)
+                    cursor?.use {
+                        if (it.moveToFirst()) {
+                            val columnIndex = it.getColumnIndex(MediaStore.MediaColumns.DATA)
+                            if (columnIndex != -1) {
+                                val path = it.getString(columnIndex)
+                                if (path != null) {
+                                    return File(path)
+                                }
+                            }
+                        }
+                    }
+                    null
+                }
+                else -> null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 
     private fun showSortDialog() {
@@ -251,6 +300,10 @@ class MainFragment : Fragment() {
                 selected.forEach { note ->
                     val file = File(note.uri.path ?: return@forEach)
                     file.delete()
+                    //Удаляем превью из кэша
+                    lifecycleScope.launch {
+                        PreviewCacheManager.deletePreview(requireContext(), file)
+                    }
                 }
                 // 2. Удаляем из списка
                 notesList.removeAll(selected)
