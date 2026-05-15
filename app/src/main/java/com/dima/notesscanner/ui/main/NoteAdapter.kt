@@ -40,15 +40,16 @@ class NoteAdapter(
 
     override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
         val note = notes[position]
+
         // Загружаем превью, если есть
         if (note.previewPath != null) {
             Glide.with(holder.itemView.context)
                 .load(note.previewPath)
                 .centerCrop()
-                .placeholder(R.drawable.ic_pdf)
+                .placeholder(R.drawable.ic_image)
                 .into(holder.ivPreview)
         } else {
-            holder.ivPreview.setImageResource(R.drawable.ic_pdf)
+            holder.ivPreview.setImageResource(R.drawable.ic_image)
         }
 
         holder.tvTitle.text = note.name.removeSuffix(".pdf").removeSuffix(".PDF")
@@ -63,14 +64,17 @@ class NoteAdapter(
         }
         holder.rootLayout.setBackgroundColor(backgroundColor)
 
+        // Обработка клика по элементу
         holder.itemView.setOnClickListener {
             onItemClick(note)
         }
 
+        // Обработка чекбокса (отключаем старый слушатель, чтобы избежать конфликтов)
+        holder.checkbox.setOnCheckedChangeListener(null)
         holder.checkbox.isChecked = note.isSelected
         holder.checkbox.setOnCheckedChangeListener { _, isChecked ->
             note.isSelected = isChecked
-            onSelectionChanged()  // ← нужно передать колбэк во фрагмент
+            onSelectionChanged()
         }
     }
 

@@ -192,16 +192,28 @@ class MainFragment : Fragment() {
             when (uri.scheme) {
                 "file" -> File(uri.path)
                 "content" -> {
+                    // Сначала пробуем получить DATA
+                    var path: String? = null
                     val cursor = requireContext().contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)
                     cursor?.use {
                         if (it.moveToFirst()) {
                             val columnIndex = it.getColumnIndex(MediaStore.MediaColumns.DATA)
                             if (columnIndex != -1) {
-                                val path = it.getString(columnIndex)
-                                if (path != null) {
-                                    return File(path)
-                                }
+                                path = it.getString(columnIndex)
                             }
+                        }
+                    }
+                    if (path != null && File(path).exists()) {
+                        return File(path)
+                    }
+                    // Если не получилось, пробуем получить через DISPLAY_NAME и путь к Downloads
+                    val nameCursor = requireContext().contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)
+                    nameCursor?.use {
+                        if (it.moveToFirst()) {
+                            val name = it.getString(0)
+                            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                            val file = File(downloadsDir, name)
+                            if (file.exists()) return file
                         }
                     }
                     null
@@ -291,25 +303,21 @@ class MainFragment : Fragment() {
         val selected = getSelectedNotes()
         if (selected.isEmpty()) return
 
-        // Диалог подтверждения
         AlertDialog.Builder(requireContext())
             .setTitle("Удалить конспекты")
             .setMessage("Вы уверены, что хотите удалить ${selected.size} конспект(ов)?")
             .setPositiveButton("Удалить") { _, _ ->
-                // 1. Удаляем файлы
                 selected.forEach { note ->
-                    val file = File(note.uri.path ?: return@forEach)
-                    file.delete()
-                    //Удаляем превью из кэша
-                    lifecycleScope.launch {
-                        PreviewCacheManager.deletePreview(requireContext(), file)
+                    val file = getFileFromUri(note.uri)
+                    if (file != null && file.exists()) {
+                        file.delete()
+                        lifecycleScope.launch {
+                            PreviewCacheManager.deletePreview(requireContext(), file)
+                        }
                     }
                 }
-                // 2. Удаляем из списка
                 notesList.removeAll(selected)
-                // 3. Обновляем адаптер
                 adapter.notifyDataSetChanged()
-                // 4. Сбрасываем выделение и обновляем UI
                 clearSelection()
             }
             .setNegativeButton("Отмена", null)
