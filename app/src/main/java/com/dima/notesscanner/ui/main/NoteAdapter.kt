@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -20,7 +21,8 @@ import java.util.Locale
 class NoteAdapter(
     private val notes: List<MainFragment.NoteItem>,
     private val onItemClick: (MainFragment.NoteItem) -> Unit,
-    private val onSelectionChanged: () -> Unit
+    private val onSelectionChanged: () -> Unit,
+    private val onCloudClick: (MainFragment.NoteItem) -> Unit,
 ) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
     class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -30,6 +32,7 @@ class NoteAdapter(
         val tvSize: TextView = itemView.findViewById(R.id.tvSize)
         val checkbox: CheckBox = itemView.findViewById(R.id.checkbox)
         val ivPreview: ImageView = itemView.findViewById(R.id.ivPreview)
+        val btnCloud: ImageButton = itemView.findViewById(R.id.btnCloud)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -75,6 +78,10 @@ class NoteAdapter(
         holder.checkbox.setOnCheckedChangeListener { _, isChecked ->
             note.isSelected = isChecked
             onSelectionChanged()
+        }
+
+        holder.btnCloud.setOnClickListener {
+            onCloudClick(note)
         }
     }
 

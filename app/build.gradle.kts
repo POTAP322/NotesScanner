@@ -14,6 +14,9 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+        manifestPlaceholders += mapOf(
+            "YANDEX_CLIENT_ID" to "29d4720f9cfd4328a79601a9b48ef1f7"
+        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -87,4 +90,5 @@ dependencies {
     implementation("com.vanniktech:android-image-cropper:4.7.0")
     implementation("org.opencv:opencv:4.13.0")
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
+    implementation("com.yandex.android:authsdk:3.1.3")
 }

@@ -12,7 +12,7 @@
     <!-- Для Android 10+ (для чтения Downloads через MediaStore) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -41,10 +41,21 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.dima.notesscanner" android:host="oauth" />
+            </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="com.yandex.authsdk.manifest.client_id"
+            android:value="${YANDEX_CLIENT_ID}" />
+
     </application>
 
 </manifest>

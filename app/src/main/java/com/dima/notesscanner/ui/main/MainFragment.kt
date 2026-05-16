@@ -21,6 +21,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.dima.notesscanner.R
 import com.dima.notesscanner.utils.PreviewCacheManager
+import com.dima.notesscanner.utils.YandexAuthManager
+import com.yandex.authsdk.YandexAuthLoginOptions
+import com.yandex.authsdk.YandexAuthResult
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -37,7 +40,13 @@ class MainFragment : Fragment() {
     private lateinit var btnShare: ImageButton
     private lateinit var btnDelete: ImageButton
 
+
     private var currentSortOrder = "date" // "date" или "name"
+
+    private lateinit var authManager: YandexAuthManager
+    private lateinit var yandexAuthLauncher: androidx.activity.result.ActivityResultLauncher<YandexAuthLoginOptions>
+
+    private var pendingUploadNote: NoteItem? = null
 
 
     // Класс для хранения информации о PDF
@@ -50,6 +59,7 @@ class MainFragment : Fragment() {
         var isSelected: Boolean = false
     )
 
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -59,6 +69,31 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // инициализируем authManager
+        authManager = YandexAuthManager(requireContext())
+
+        // Правильная регистрация
+        yandexAuthLauncher = registerForActivityResult(
+            authManager.getLoginContract()
+        ) { result: YandexAuthResult ->
+            lifecycleScope.launch {
+                val token = authManager.handleAuthResult(result)
+                if (token != null) {
+                    val jwtToken = authManager.getJwtToken(token)
+                    saveToken(jwtToken)
+                    Toast.makeText(requireContext(), "Авторизация успешна!", Toast.LENGTH_LONG).show()
+
+                    // Загружаем отложенный файл
+                    pendingUploadNote?.let { note ->
+                        // TODO: загружаем файл
+                        pendingUploadNote = null
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Авторизация отменена или произошла ошибка", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
         setupRecyclerView(view)
         setupItems(view)
@@ -71,7 +106,8 @@ class MainFragment : Fragment() {
 
         adapter = NoteAdapter(notesList,
             onItemClick = { note -> openPdf(note.uri) },
-            onSelectionChanged = { updateSelectionUI() }
+            onSelectionChanged = { updateSelectionUI() },
+            onCloudClick = { note -> startYandexAuthForNote(note) }
         )
         rvNotes.adapter = adapter
     }
@@ -98,6 +134,7 @@ class MainFragment : Fragment() {
         view.findViewById<ImageButton>(R.id.btnSort).setOnClickListener {
             showSortDialog()
         }
+
     }
 
     private fun loadNotes() {
@@ -340,6 +377,30 @@ class MainFragment : Fragment() {
         } else {
             normalPanel.visibility = View.VISIBLE
             selectionPanel.visibility = View.GONE
+        }
+    }
+
+
+
+    private fun saveToken(token: String) {
+        // Сохраняем токен в SharedPreferences
+        val prefs = requireContext().getSharedPreferences("yandex_auth", android.content.Context.MODE_PRIVATE)
+        prefs.edit().putString("yandex_token", token).apply()
+    }
+
+    private fun startYandexAuthForNote(note: NoteItem) {
+        // Проверяем, есть ли сохранённый токен
+        val prefs = requireContext().getSharedPreferences("yandex_auth", android.content.Context.MODE_PRIVATE)
+        val existingToken = prefs.getString("yandex_token", null)
+
+        if (existingToken != null) {
+            // Токен есть — загружаем файл
+
+        } else {
+            // Нет токена — запрашиваем авторизацию, потом загружаем
+            pendingUploadNote = note  // сохраняем для загрузки после авторизации
+            val loginOptions = authManager.createLoginOptions()
+            yandexAuthLauncher.launch(loginOptions)
         }
     }
 
