@@ -70,34 +70,47 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // инициализируем authManager
         authManager = YandexAuthManager(requireContext())
 
-        // Правильная регистрация
+        // Регистрируем launcher ДО того, как он понадобится
         yandexAuthLauncher = registerForActivityResult(
             authManager.getLoginContract()
         ) { result: YandexAuthResult ->
-            lifecycleScope.launch {
-                val token = authManager.handleAuthResult(result)
-                if (token != null) {
-                    val jwtToken = authManager.getJwtToken(token)
-                    saveToken(jwtToken)
-                    Toast.makeText(requireContext(), "Авторизация успешна!", Toast.LENGTH_LONG).show()
-
-                    // Загружаем отложенный файл
-                    pendingUploadNote?.let { note ->
-                        // TODO: загружаем файл
-                        pendingUploadNote = null
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "Авторизация отменена или произошла ошибка", Toast.LENGTH_SHORT).show()
-                }
-            }
+            handleAuthResult(result)
         }
 
         setupRecyclerView(view)
         setupItems(view)
         loadNotes()
+    }
+
+    private fun handleAuthResult(result: YandexAuthResult) {
+        when (result) {
+            is YandexAuthResult.Success -> {
+                // Запускаем корутину для сетевого запроса
+                lifecycleScope.launch {
+                    try {
+                        val jwtToken = authManager.getJwtToken(result.token)
+                        saveToken(jwtToken)
+                        Toast.makeText(requireContext(), "Авторизация успешна!", Toast.LENGTH_LONG).show()
+
+                        pendingUploadNote?.let { note ->
+                            Toast.makeText(requireContext(), "Загрузка: ${note.name}", Toast.LENGTH_SHORT).show()
+                            // TODO: загрузить файл
+                            pendingUploadNote = null
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            is YandexAuthResult.Failure -> {
+                Toast.makeText(requireContext(), "Ошибка: ${result.exception.message}", Toast.LENGTH_SHORT).show()
+            }
+            YandexAuthResult.Cancelled -> {
+                Toast.makeText(requireContext(), "Авторизация отменена", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun setupRecyclerView(view: View) {
@@ -383,22 +396,23 @@ class MainFragment : Fragment() {
 
 
     private fun saveToken(token: String) {
-        // Сохраняем токен в SharedPreferences
         val prefs = requireContext().getSharedPreferences("yandex_auth", android.content.Context.MODE_PRIVATE)
         prefs.edit().putString("yandex_token", token).apply()
     }
 
-    private fun startYandexAuthForNote(note: NoteItem) {
-        // Проверяем, есть ли сохранённый токен
+    private fun getToken(): String? {
         val prefs = requireContext().getSharedPreferences("yandex_auth", android.content.Context.MODE_PRIVATE)
-        val existingToken = prefs.getString("yandex_token", null)
+        return prefs.getString("yandex_token", null)
+    }
+
+    private fun startYandexAuthForNote(note: NoteItem) {
+        val existingToken = getToken()
 
         if (existingToken != null) {
-            // Токен есть — загружаем файл
-
+            Toast.makeText(requireContext(), "Загрузка: ${note.name}", Toast.LENGTH_SHORT).show()
+            // TODO: загрузить файл
         } else {
-            // Нет токена — запрашиваем авторизацию, потом загружаем
-            pendingUploadNote = note  // сохраняем для загрузки после авторизации
+            pendingUploadNote = note
             val loginOptions = authManager.createLoginOptions()
             yandexAuthLauncher.launch(loginOptions)
         }

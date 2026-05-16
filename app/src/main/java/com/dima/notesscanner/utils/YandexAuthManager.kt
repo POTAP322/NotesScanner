@@ -7,6 +7,8 @@ import com.yandex.authsdk.YandexAuthOptions
 import com.yandex.authsdk.YandexAuthResult
 import com.yandex.authsdk.YandexAuthSdk
 import com.yandex.authsdk.YandexAuthToken
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class YandexAuthManager(context: Context) {
 
@@ -18,16 +20,7 @@ class YandexAuthManager(context: Context) {
 
     fun createLoginOptions(): YandexAuthLoginOptions = YandexAuthLoginOptions()
 
-    fun handleAuthResult(result: YandexAuthResult): YandexAuthToken? {
-        return when (result) {
-            is YandexAuthResult.Success -> result.token
-            is YandexAuthResult.Failure -> {
-                result.exception.printStackTrace()
-                null
-            }
-            YandexAuthResult.Cancelled -> null
-        }
+    suspend fun getJwtToken(token: YandexAuthToken): String = withContext(Dispatchers.IO) {
+        sdk.getJwt(token)
     }
-
-    fun getJwtToken(token: YandexAuthToken): String = sdk.getJwt(token)
 }
