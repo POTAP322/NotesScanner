@@ -96,20 +96,28 @@ class MainFragment : Fragment() {
                         val oauthToken = result.token.value  //OAuth-токен
                         saveToken(oauthToken)  // сохраняем
 
-                        Toast.makeText(requireContext(), "Авторизация успешна!", Toast.LENGTH_LONG).show()
+                        Toast.makeText(requireContext(), "Авторизация успешна!", Toast.LENGTH_LONG)
+                            .show()
 
                         pendingUploadNote?.let { note ->
                             uploadFileToYandexDisk(note, oauthToken)
                             pendingUploadNote = null
                         }
                     } catch (e: Exception) {
-                        Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
             }
+
             is YandexAuthResult.Failure -> {
-                Toast.makeText(requireContext(), "Ошибка: ${result.exception.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Ошибка: ${result.exception.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
+
             YandexAuthResult.Cancelled -> {
                 Toast.makeText(requireContext(), "Авторизация отменена", Toast.LENGTH_SHORT).show()
             }
@@ -120,7 +128,8 @@ class MainFragment : Fragment() {
         rvNotes = view.findViewById(R.id.rvNotes)
         rvNotes.layoutManager = LinearLayoutManager(requireContext())
 
-        adapter = NoteAdapter(notesList,
+        adapter = NoteAdapter(
+            notesList,
             onItemClick = { note -> openPdf(note.uri) },
             onSelectionChanged = { updateSelectionUI() },
             onCloudClick = { note -> startYandexAuthForNote(note) }
@@ -196,10 +205,12 @@ class MainFragment : Fragment() {
                 val lastModified = it.getLong(dateColumn) * 1000
                 val sizeBytes = it.getLong(sizeColumn)
                 val sizeMB = sizeBytes / (1024.0 * 1024.0)  // байты → МБ
+                val isUploaded = loadUploadStatus(name)
 
                 val fileUri = Uri.withAppendedPath(uri, id.toString())
 
-                notesList.add(NoteItem(name, fileUri, lastModified, sizeMB))
+                notesList.add(NoteItem(name, fileUri, lastModified, sizeMB, isUploaded = isUploaded))
+
             }
         }
 
@@ -208,7 +219,8 @@ class MainFragment : Fragment() {
 
     @Suppress("DEPRECATION")
     private fun loadNotesWithFileSystem() {
-        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val downloadsDir =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
 
         val pdfFiles = downloadsDir.listFiles { file ->
             file.extension.equals("pdf", ignoreCase = true)
@@ -226,7 +238,8 @@ class MainFragment : Fragment() {
     private fun loadPreviewsAsync() {
         lifecycleScope.launch {
             for (note in notesList) {
-                val previewPath = PreviewCacheManager.getPreview(requireContext(), note.uri, 124, 175)
+                val previewPath =
+                    PreviewCacheManager.getPreview(requireContext(), note.uri, 124, 175)
                 if (previewPath != null) {
                     note.previewPath = previewPath
                     val index = notesList.indexOf(note)
@@ -234,7 +247,10 @@ class MainFragment : Fragment() {
                         adapter.notifyItemChanged(index)
                     }
                 } else {
-                    android.util.Log.e("MainFragment", "Failed to generate preview for: ${note.name}")
+                    android.util.Log.e(
+                        "MainFragment",
+                        "Failed to generate preview for: ${note.name}"
+                    )
                 }
             }
         }
@@ -247,7 +263,13 @@ class MainFragment : Fragment() {
                 "content" -> {
                     // Пробуем получить DATA
                     var path: String? = null
-                    val cursor = requireContext().contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)
+                    val cursor = requireContext().contentResolver.query(
+                        uri,
+                        arrayOf(MediaStore.MediaColumns.DATA),
+                        null,
+                        null,
+                        null
+                    )
                     cursor?.use {
                         if (it.moveToFirst()) {
                             val columnIndex = it.getColumnIndex(MediaStore.MediaColumns.DATA)
@@ -262,14 +284,24 @@ class MainFragment : Fragment() {
                     }
 
                     // Пробуем через DISPLAY_NAME
-                    val nameCursor = requireContext().contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)
+                    val nameCursor = requireContext().contentResolver.query(
+                        uri,
+                        arrayOf(MediaStore.MediaColumns.DISPLAY_NAME),
+                        null,
+                        null,
+                        null
+                    )
                     nameCursor?.use {
                         if (it.moveToFirst()) {
                             val name = it.getString(0)
-                            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                            val downloadsDir =
+                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                             val file = File(downloadsDir, name)
                             if (file.exists()) {
-                                android.util.Log.d("MainFragment", "Found file via DISPLAY_NAME: ${file.absolutePath}")
+                                android.util.Log.d(
+                                    "MainFragment",
+                                    "Found file via DISPLAY_NAME: ${file.absolutePath}"
+                                )
                                 return file
                             }
                         }
@@ -277,6 +309,7 @@ class MainFragment : Fragment() {
                     android.util.Log.e("MainFragment", "Could not resolve URI: $uri")
                     null
                 }
+
                 else -> null
             }
         } catch (e: Exception) {
@@ -326,7 +359,11 @@ class MainFragment : Fragment() {
 
             startActivity(Intent.createChooser(intent, "Открыть PDF"))
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Не удалось открыть PDF: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                requireContext(),
+                "Не удалось открыть PDF: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -397,15 +434,20 @@ class MainFragment : Fragment() {
     }
 
 
-
     private fun saveToken(token: String) {
-        val prefs = requireContext().getSharedPreferences("yandex_auth", android.content.Context.MODE_PRIVATE)
+        val prefs = requireContext().getSharedPreferences(
+            "yandex_auth",
+            android.content.Context.MODE_PRIVATE
+        )
         prefs.edit().putString("yandex_token", token).apply()
         Log.d("MainFragment", "✅ Token saved: ${token.take(200)}... (${token.length} chars)")
     }
 
     private fun getToken(): String? {
-        val prefs = requireContext().getSharedPreferences("yandex_auth", android.content.Context.MODE_PRIVATE)
+        val prefs = requireContext().getSharedPreferences(
+            "yandex_auth",
+            android.content.Context.MODE_PRIVATE
+        )
         val token = prefs.getString("yandex_token", null)
         Log.d("MainFragment", "📦 Token retrieved: ${token?.take(200)}... (${token?.length} chars)")
         return token
@@ -415,7 +457,6 @@ class MainFragment : Fragment() {
         val existingToken = getToken()
 
         if (existingToken != null) {
-            Toast.makeText(requireContext(), "Загрузка: ${note.name}", Toast.LENGTH_SHORT).show()
             uploadFileToYandexDisk(note, existingToken)
         } else {
             pendingUploadNote = note
@@ -426,39 +467,50 @@ class MainFragment : Fragment() {
 
     private fun uploadFileToYandexDisk(note: NoteItem, token: String) {
         lifecycleScope.launch {
-            try {
-                // Получаем реальный файл из URI
-                val file = getFileFromUri(note.uri)
-                if (file == null || !file.exists()) {
-                    Toast.makeText(requireContext(), "Файл не найден: ${note.name}", Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
+            // Получаем реальный файл из URI
+            val file = getFileFromUri(note.uri)
+            if (file == null || !file.exists()) {
+                Toast.makeText(requireContext(), "Файл не найден: ${note.name}", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
 
-                // Показываем прогресс
-                val progressDialog = android.app.ProgressDialog(requireContext()).apply {
-                    setMessage("Загрузка: ${note.name}")
-                    setCancelable(false)
-                    show()
-                }
+            // Показываем прогресс
+            val progressDialog = android.app.ProgressDialog(requireContext()).apply {
+                setMessage(if (note.isUploaded) "Удаление: ${note.name}" else "Загрузка: ${note.name}")
+                setCancelable(false)
+                show()
+            }
 
-                // Загружаем на Яндекс.Диск
-                val diskClient = YandexDiskClient(token)
+            val diskClient = YandexDiskClient(token)
+
+            if (note.isUploaded) {
+                // Если уже загружено — удаляем
+                val deleted = diskClient.deleteFile(note.name)
+                progressDialog.dismiss()
+
+                if (deleted) {
+                    updateCloudIcon(note, false)
+                    saveUploadStatus(note.name, false)
+                    Toast.makeText(requireContext(), "Удалено: ${note.name}", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(requireContext(), "Ошибка удаления: ${note.name}", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                // Если не загружено — загружаем
                 val success = diskClient.uploadFile(file, note.name)
-
                 progressDialog.dismiss()
 
                 if (success) {
-                    Toast.makeText(requireContext(), "Загружено: ${note.name}", Toast.LENGTH_LONG).show()
-                    // Меняем иконку облака
                     updateCloudIcon(note, true)
+                    saveUploadStatus(note.name, true)
+                    Toast.makeText(requireContext(), "Загружено: ${note.name}", Toast.LENGTH_LONG).show()
                 } else {
-                    Toast.makeText(requireContext(), "Ошибка загрузки: ${note.name}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), "Ошибка загрузки: ${note.name}", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
     private fun updateCloudIcon(note: NoteItem, success: Boolean) {
         // Обновляем иконку в списке (можно показать, что файл уже в облаке)
         val index = notesList.indexOf(note)
@@ -467,6 +519,16 @@ class MainFragment : Fragment() {
 
             adapter.notifyItemChanged(index)
         }
+    }
+
+    private fun saveUploadStatus(noteName: String, isUploaded: Boolean) {
+        val prefs = requireContext().getSharedPreferences("upload_status", android.content.Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(noteName, isUploaded).apply()
+    }
+
+    private fun loadUploadStatus(noteName: String): Boolean {
+        val prefs = requireContext().getSharedPreferences("upload_status", android.content.Context.MODE_PRIVATE)
+        return prefs.getBoolean(noteName, false)
     }
 
 

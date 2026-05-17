@@ -86,4 +86,34 @@ class YandexDiskClient(private val token: String) {
         }
     }
 
+    /**
+     * Удаляем файл на Я диске
+     */
+    suspend fun deleteFile(remotePath: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "deleteFile: Deleting file: $remotePath")
+            val encodedPath = java.net.URLEncoder.encode(remotePath, "UTF-8")
+            val url = "https://cloud-api.yandex.net/v1/disk/resources?path=app:/$encodedPath&permanently=true"
+
+            val request = Request.Builder()
+                .url(url)
+                .delete()
+                .addHeader("Authorization", "OAuth $token")
+                .build()
+
+            val response = client.newCall(request).execute()
+            val isSuccess = response.isSuccessful
+            Log.d(TAG, "deleteFile: Response code: ${response.code}, success: $isSuccess")
+
+            if (!isSuccess) {
+                val errorBody = response.body?.string()
+                Log.e(TAG, "deleteFile: Failed, error: $errorBody")
+            }
+            response.close()
+            isSuccess
+        } catch (e: Exception) {
+            Log.e(TAG, "deleteFile: Error", e)
+            false
+        }
+    }
 }

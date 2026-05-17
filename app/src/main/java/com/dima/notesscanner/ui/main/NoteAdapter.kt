@@ -82,6 +82,8 @@ class NoteAdapter(
 
         if(note.isUploaded == true){
             holder.btnCloud.setImageResource(R.drawable.ic_cloud_done)
+        }else{
+            holder.btnCloud.setImageResource(R.drawable.ic_no_cloud)
         }
         holder.btnCloud.setOnClickListener {
             onCloudClick(note)
