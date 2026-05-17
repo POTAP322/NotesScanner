@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,6 +23,7 @@ import androidx.navigation.fragment.findNavController
 import com.dima.notesscanner.R
 import com.dima.notesscanner.utils.PreviewCacheManager
 import com.dima.notesscanner.utils.YandexAuthManager
+import com.dima.notesscanner.utils.YandexDiskClient
 import com.yandex.authsdk.YandexAuthLoginOptions
 import com.yandex.authsdk.YandexAuthResult
 import kotlinx.coroutines.launch
@@ -56,7 +58,8 @@ class MainFragment : Fragment() {
         val lastModified: Long,
         val sizeMB: Double,
         var previewPath: String? = null,
-        var isSelected: Boolean = false
+        var isSelected: Boolean = false,
+        var isUploaded: Boolean = false
     )
 
 
@@ -87,16 +90,16 @@ class MainFragment : Fragment() {
     private fun handleAuthResult(result: YandexAuthResult) {
         when (result) {
             is YandexAuthResult.Success -> {
-                // Запускаем корутину для сетевого запроса
                 lifecycleScope.launch {
                     try {
-                        val jwtToken = authManager.getJwtToken(result.token)
-                        saveToken(jwtToken)
+                        // Сохраняем токен
+                        val oauthToken = result.token.value  //OAuth-токен
+                        saveToken(oauthToken)  // сохраняем
+
                         Toast.makeText(requireContext(), "Авторизация успешна!", Toast.LENGTH_LONG).show()
 
                         pendingUploadNote?.let { note ->
-                            Toast.makeText(requireContext(), "Загрузка: ${note.name}", Toast.LENGTH_SHORT).show()
-                            // TODO: загрузить файл
+                            uploadFileToYandexDisk(note, oauthToken)
                             pendingUploadNote = null
                         }
                     } catch (e: Exception) {
@@ -398,11 +401,14 @@ class MainFragment : Fragment() {
     private fun saveToken(token: String) {
         val prefs = requireContext().getSharedPreferences("yandex_auth", android.content.Context.MODE_PRIVATE)
         prefs.edit().putString("yandex_token", token).apply()
+        Log.d("MainFragment", "✅ Token saved: ${token.take(200)}... (${token.length} chars)")
     }
 
     private fun getToken(): String? {
         val prefs = requireContext().getSharedPreferences("yandex_auth", android.content.Context.MODE_PRIVATE)
-        return prefs.getString("yandex_token", null)
+        val token = prefs.getString("yandex_token", null)
+        Log.d("MainFragment", "📦 Token retrieved: ${token?.take(200)}... (${token?.length} chars)")
+        return token
     }
 
     private fun startYandexAuthForNote(note: NoteItem) {
@@ -410,11 +416,56 @@ class MainFragment : Fragment() {
 
         if (existingToken != null) {
             Toast.makeText(requireContext(), "Загрузка: ${note.name}", Toast.LENGTH_SHORT).show()
-            // TODO: загрузить файл
+            uploadFileToYandexDisk(note, existingToken)
         } else {
             pendingUploadNote = note
             val loginOptions = authManager.createLoginOptions()
             yandexAuthLauncher.launch(loginOptions)
+        }
+    }
+
+    private fun uploadFileToYandexDisk(note: NoteItem, token: String) {
+        lifecycleScope.launch {
+            try {
+                // Получаем реальный файл из URI
+                val file = getFileFromUri(note.uri)
+                if (file == null || !file.exists()) {
+                    Toast.makeText(requireContext(), "Файл не найден: ${note.name}", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                // Показываем прогресс
+                val progressDialog = android.app.ProgressDialog(requireContext()).apply {
+                    setMessage("Загрузка: ${note.name}")
+                    setCancelable(false)
+                    show()
+                }
+
+                // Загружаем на Яндекс.Диск
+                val diskClient = YandexDiskClient(token)
+                val success = diskClient.uploadFile(file, note.name)
+
+                progressDialog.dismiss()
+
+                if (success) {
+                    Toast.makeText(requireContext(), "Загружено: ${note.name}", Toast.LENGTH_LONG).show()
+                    // Меняем иконку облака
+                    updateCloudIcon(note, true)
+                } else {
+                    Toast.makeText(requireContext(), "Ошибка загрузки: ${note.name}", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    private fun updateCloudIcon(note: NoteItem, success: Boolean) {
+        // Обновляем иконку в списке (можно показать, что файл уже в облаке)
+        val index = notesList.indexOf(note)
+        if (index != -1) {
+            note.isUploaded = success
+
+            adapter.notifyItemChanged(index)
         }
     }
 

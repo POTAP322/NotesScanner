@@ -80,6 +80,9 @@ class NoteAdapter(
             onSelectionChanged()
         }
 
+        if(note.isUploaded == true){
+            holder.btnCloud.setImageResource(R.drawable.ic_cloud_done)
+        }
         holder.btnCloud.setOnClickListener {
             onCloudClick(note)
         }
