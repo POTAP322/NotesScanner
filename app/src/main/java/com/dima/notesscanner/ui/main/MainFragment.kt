@@ -497,7 +497,7 @@ class MainFragment : Fragment() {
                 }
             } else {
                 // Если не загружено — загружаем
-                val success = diskClient.uploadFile(file, note.name)
+                val success = diskClient.uploadFile(requireContext(), note.uri, note.name)
                 progressDialog.dismiss()
 
                 if (success) {

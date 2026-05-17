@@ -1,6 +1,7 @@
 package com.dima.notesscanner.utils
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -61,15 +62,21 @@ class YandexDiskClient(private val token: String) {
     /**
      * Загружает файл на Яндекс.Диск
      */
-    suspend fun uploadFile(file: File, remotePath: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun uploadFile(context: Context, uri: Uri, remotePath: String): Boolean = withContext(Dispatchers.IO) {
         try {
-            val uploadUrl = getUploadUrl(remotePath)
-            if (uploadUrl == null) {
-                Log.e(TAG, "uploadFile: Failed to get upload URL")
+            Log.d(TAG, "uploadFile: Remote path: $remotePath")
+            val uploadUrl = getUploadUrl(remotePath) ?: return@withContext false
+
+            // Открываем файл через ContentResolver
+            val inputStream = context.contentResolver.openInputStream(uri)
+            if (inputStream == null) {
+                Log.e(TAG, "uploadFile: Failed to open input stream")
                 return@withContext false
             }
 
-            val fileData = file.readBytes()
+            val fileData = inputStream.readBytes()
+            inputStream.close()
+
             val request = Request.Builder()
                 .url(uploadUrl)
                 .put(fileData.toRequestBody("application/pdf".toMediaTypeOrNull()))
