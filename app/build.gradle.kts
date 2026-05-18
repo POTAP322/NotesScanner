@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -13,12 +14,26 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+        manifestPlaceholders += mapOf(
+            "YANDEX_CLIENT_ID" to "29d4720f9cfd4328a79601a9b48ef1f7"
+        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
+    }
+
+
 
     buildTypes {
         release {
@@ -39,9 +54,6 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -59,6 +71,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -69,4 +82,13 @@ dependencies {
 
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.vanniktech:android-image-cropper:4.7.0")
+    implementation("org.opencv:opencv:4.13.0")
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
+    implementation("com.yandex.android:authsdk:3.1.3")
 }
