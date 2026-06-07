@@ -26,8 +26,8 @@ object ImageProcessor {
             val srcMat = Mat()
             Utils.bitmapToMat(originalBitmap, srcMat)
 
-            val alpha = 1.2
-            val beta = 20.0
+            // Адаптивный подбор параметров
+            val (alpha, beta) = computeAdaptiveParams(srcMat)
 
             val dstMat = Mat()
             srcMat.convertTo(dstMat, -1, alpha, beta)
@@ -45,10 +45,39 @@ object ImageProcessor {
 
             resultBitmap
         } catch (e: Exception) {
-            android.util.Log.e("ImageProcessor", "Error in brightness/contrast", e)
+            android.util.Log.e("ImageProcessor", "Error in adaptive brightness/contrast", e)
             null
         }
     }
+
+    private fun computeAdaptiveParams(srcMat: Mat): Pair<Double, Double> {
+        val gray = Mat()
+        Imgproc.cvtColor(srcMat, gray, Imgproc.COLOR_RGBA2GRAY)
+
+        val mean = MatOfDouble()
+        val stddev = MatOfDouble()
+        Core.meanStdDev(gray, mean, stddev)
+
+        val meanVal = mean.get(0, 0)[0]
+        val stdVal = stddev.get(0, 0)[0]
+
+        gray.release()
+        mean.release()
+        stddev.release()
+
+        val targetMean = 120.0
+        val targetStd = 65.0
+
+        var beta = targetMean - meanVal
+        beta = beta.coerceIn(-40.0, 40.0)
+
+        var alpha = if (stdVal > 0) targetStd / stdVal else 1.0
+        alpha = alpha.coerceIn(0.7, 1.5)
+
+        return Pair(alpha, beta)
+    }
+
+
 
     fun autoEnhancePerspective(context: Context, photoFile: File): Bitmap? {
         // Пытаемся выпрямить документ

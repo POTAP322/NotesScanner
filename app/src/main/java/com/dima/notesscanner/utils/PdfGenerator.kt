@@ -91,9 +91,7 @@ class PdfGenerator(private val context: Context) {
         }
     }
 
-    /**
-     * Сохраняет PDF в Downloads
-     */
+    //Сохраняет PDF в Downloads
     private fun saveToDownloads(document: PdfDocument, fileName: String): Uri {
         val resolver = context.contentResolver
         val contentValues = android.content.ContentValues().apply {
