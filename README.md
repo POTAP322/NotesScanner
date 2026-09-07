@@ -18,3 +18,6 @@
 - Синхронизация с сервером (REST API)
 - Адаптивный интерфейс
 - Навигация между экранами
+
+Ссылка на страницу в рустор:
+https://www.rustore.ru/catalog/app/com.dima.notesscanner
